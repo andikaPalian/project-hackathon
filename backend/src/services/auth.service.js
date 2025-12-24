@@ -6,7 +6,7 @@ import { AppError } from "../utils/errorHandler.js";
 // Note: Perbaiki Querynya agar cepat
 export const register = async (username, email, password) => {
   try {
-    const user = await db.collection("users").where("email", "==", email).get();
+    const user = await db.collection("users").where("email", "==", email).limit(1).get();
     if (!user.empty) throw new AppError("Email already exists", 400);
 
     // Hash the password
@@ -17,6 +17,7 @@ export const register = async (username, email, password) => {
       username,
       email,
       password: hashedPassword,
+      createdAt: new Date(),
     });
 
     const userDoc = await db.collection("users").doc(newUser.id).get();
