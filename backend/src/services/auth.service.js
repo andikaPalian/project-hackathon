@@ -17,6 +17,7 @@ export const register = async (username, email, password) => {
       username,
       email,
       password: hashedPassword,
+      profilePic: "",
       createdAt: new Date(),
     });
 
