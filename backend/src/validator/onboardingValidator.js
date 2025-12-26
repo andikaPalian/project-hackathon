@@ -8,7 +8,7 @@ export const onboardingSchema = z.object({
     })
     .min(2, "Nama jurusan terlalu pendek"),
   subjects: z.string().array().nonempty("Daftar mata kuliah tidak boleh kosong"),
-  learningStyle: z.enum(["Visual", "Teks", "Step-by-step"], {
+  learningStyle: z.enum(["visual", "teks", "step-by-step"], {
     errorMap: () => ({ message: "Gaya belajar tidak valid" }),
   }),
   goal: z.string().array().optional().default([]),

@@ -1,61 +1,104 @@
 import { db } from "../config/firebase.js";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
+import admin from "../config/firebase.js";
 import { AppError } from "../utils/errorHandler.js";
+import axios from "axios";
 
 // Note: Perbaiki Querynya agar cepat
-export const register = async (username, email, password) => {
+// export const register = async (username, email, password) => {
+//   try {
+//     const userRecord = await admin.auth().createUser({
+//       email: email,
+//       username: username,
+//       password: password,
+//     });
+
+//     const userProfile = {
+//       username: username,
+//       email: email,
+//       profilePic: "",
+//       createdAt: admin.firestore.FieldValue.serverTimestamp(),
+//     };
+
+//     await db.collection("users").doc(userRecord.uid).set(userProfile);
+
+//     return {
+//       id: userRecord.uid,
+//       ...userProfile,
+//     };
+//   } catch (error) {
+//     if (error.code === "auth/email-already-exists") {
+//       throw new AppError("Email already in use", 400);
+//     }
+//     console.error("Error registering user: ", error);
+//     throw error;
+//   }
+// };
+
+export const createUser = async (uid, userData) => {
   try {
-    const user = await db.collection("users").where("email", "==", email).limit(1).get();
-    if (!user.empty) throw new AppError("Email already exists", 400);
+    const userDoc = await db.collection("users").doc(uid).get();
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 12);
+    if (userDoc.exists) {
+      throw new AppError("User already exists", 400);
+    }
 
-    // Create New User
-    const newUser = await db.collection("users").add({
-      username,
-      email,
-      password: hashedPassword,
-      profilePic: "",
-      createdAt: new Date(),
+    await db.collection("users").doc(uid).set({
+      uid: uid,
+      email: userData.email,
+      name: userData.name,
+      role: "user",
+      onboardingCompleted: false,
+      major: "",
+      subjects: [],
+      learningStyle: "",
+      goal: [],
+      createdAt: new Date().toISOString(),
     });
 
-    const userDoc = await db.collection("users").doc(newUser.id).get();
-    const userData = userDoc.data();
-
-    return userData;
+    return { success: true };
   } catch (error) {
-    // Handle the error
-    console.error("Error registering user: ", error);
+    console.error("Error creating user: ", error);
+    throw error;
+  }
+};
+
+export const getUserProfile = async (userId) => {
+  try {
+    const userDoc = await db.collection("users").doc(userId).get();
+
+    if (!userDoc.exists) {
+      return null;
+    }
+
+    return userDoc.data();
+  } catch (error) {
+    console.error("Error fetching user profile: ", error);
     throw error;
   }
 };
 
 export const login = async (email, password) => {
   try {
-    const user = await db.collection("users").where("email", "==", email).get();
-    if (user.empty) throw new AppError("User not found", 404);
+    const apikey = process.env.FIREBASE_API_KEY;
 
-    const userDoc = user.docs[0];
-    const userData = userDoc.data();
+    if (!apikey) {
+      throw new AppError("Firebase API key is not configured", 500);
+    }
 
-    // Compare password
-    const isMatch = await bcrypt.compare(password, userData.password);
-    if (!isMatch) throw new AppError("Invalid password", 401);
+    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apikey}`;
 
-    // Generate JWT token
-    const token = jwt.sign(
-      {
-        id: userDoc.id,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1d",
-      }
-    );
+    const response = await axios.post(url, {
+      email: email,
+      password: password,
+      returnSecureToken: true,
+    });
 
-    return token;
+    const { idToken, localId } = response.data;
+
+    return {
+      token: idToken,
+      userId: localId,
+    };
   } catch (error) {
     // Handle the error
     console.error("Error login user: ", error);
