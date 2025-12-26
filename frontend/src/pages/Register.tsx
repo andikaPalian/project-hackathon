@@ -1,31 +1,77 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Layout } from '@/components/layout/Layout';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GradientButton } from '@/components/ui/GradientButton';
-import { useUser } from '@/contexts/UserContext';
-import { GraduationCap } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Layout } from "@/components/layout/Layout";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GradientButton } from "@/components/ui/GradientButton";
+import { useUser } from "@/contexts/UserContext";
+import { GraduationCap } from "lucide-react";
+import { toast } from "sonner";
+import api from "@/utils/api";
 
 export default function Register() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { register } = useUser();
   const navigate = useNavigate();
+
+  const { register } = useUser();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await register(name, email, password);
-      toast.success('Akun berhasil dibuat!');
-      navigate('/onboarding');
-    } catch {
-      toast.error('Registrasi gagal');
+      const userCredentials = await register(name, email, password);
+      const user = userCredentials.user;
+
+      const payload = {
+        uid: user.uid,
+        email: email,
+        name: name,
+      };
+
+      console.log("====================================");
+      console.log("DATA YANG AKAN DIKIRIM KE BACKEND:", payload);
+      console.log("====================================");
+
+      // 3. Validasi Manual di Frontend (Mencegah kirim data kosong)
+      if (!name || name.trim() === "") {
+        throw new Error("Nama tidak boleh kosong!");
+      }
+
+      // 4. Kirim ke Backend
+      await api.post("/api/auth/register", payload);
+
+      toast.success("Akun berhasil dibuat!");
+      navigate("/onboarding");
+
+      // await api.post("/api/auth/register", {
+      //   uid: user.uid,
+      //   email: email,
+      //   name: name,
+      // });
+
+      toast.success("Akun berhasil dibuat!");
+      navigate("/onboarding");
+    } catch (error) {
+      // console.error(error);
+      const errorMessage = error.response?.data?.message || "Registrasi gagal. Coba lagi.";
+      toast.error(errorMessage);
+
+      console.error("Register Error:", error);
+
+      // Cek pesan error dari Backend
+      if (error.response) {
+        // Ini akan menampilkan pesan spesifik dari backend (misal: "Data tidak lengkap")
+        console.log("Respon Backend:", error.response.data);
+        toast.error(error.response.data.message || "Gagal menyimpan data ke database.");
+      } else if (error.code === "auth/email-already-in-use") {
+        toast.error("Email ini sudah terdaftar. Silakan login.");
+      } else {
+        toast.error("Terjadi kesalahan sistem.");
+      }
     } finally {
       setLoading(false);
     }
@@ -46,19 +92,47 @@ export default function Register() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Nama Lengkap</Label>
-                <Input id="name" placeholder="Nama kamu" value={name} onChange={(e) => setName(e.target.value)} required />
+                <Input
+                  id="name"
+                  placeholder="Nama kamu"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="email@university.ac.id" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="email@university.ac.id"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" placeholder="Minimal 8 karakter" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Minimal 8 karakter"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={8}
+                />
               </div>
-              <GradientButton type="submit" className="w-full" disabled={loading}>{loading ? 'Memproses...' : 'Daftar & Mulai Belajar'}</GradientButton>
+              <GradientButton type="submit" className="w-full" disabled={loading}>
+                {loading ? "Memproses..." : "Daftar & Mulai Belajar"}
+              </GradientButton>
             </form>
-            <p className="text-center text-sm text-muted-foreground mt-4">Sudah punya akun? <Link to="/login" className="text-primary hover:underline">Masuk</Link></p>
+            <p className="text-center text-sm text-muted-foreground mt-4">
+              Sudah punya akun?{" "}
+              <Link to="/login" className="text-primary hover:underline">
+                Masuk
+              </Link>
+            </p>
           </CardContent>
         </Card>
       </div>

@@ -2,12 +2,12 @@
 
 export interface User {
   id: string;
-  name: string;
+  username: string;
   email: string;
-  jurusan: string;
-  mataKuliah: string[];
-  gayaBelajar: string;
-  tujuan: string[];
+  major: string;
+  subjects: string[];
+  learningStyle: string;
+  goal: string[];
   streak: number;
   lastStudy: string;
   totalMastery: number;
@@ -66,12 +66,12 @@ export interface ChatMessage {
 
 export const mockUser: User = {
   id: '1',
-  name: 'Andi Pratama',
+  username: 'Andi Pratama',
   email: 'andi@university.ac.id',
-  jurusan: 'Teknik Informatika',
-  mataKuliah: ['Sistem Operasi', 'Basis Data', 'Algoritma dan Struktur Data'],
-  gayaBelajar: 'step-by-step',
-  tujuan: ['Persiapan UTS/UAS', 'Memahami konsep'],
+  major: 'Teknik Informatika',
+  subjects: ['Sistem Operasi', 'Basis Data', 'Algoritma dan Struktur Data'],
+  learningStyle: 'step-by-step',
+  goal: ['Persiapan UTS/UAS', 'Memahami konsep'],
   streak: 7,
   lastStudy: '2024-01-15',
   totalMastery: 68,
