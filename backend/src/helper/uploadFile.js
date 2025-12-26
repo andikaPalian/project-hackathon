@@ -1,0 +1,18 @@
+import { v2 as cloudinary } from "cloudinary";
+
+export const uploadToCloudinary = (buffer, folder, fileName) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: "auto",
+        folder: folder,
+        public_id: fileName,
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+    uploadStream.end(buffer);
+  });
+};

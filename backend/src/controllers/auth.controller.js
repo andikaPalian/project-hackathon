@@ -20,12 +20,15 @@ export const loginController = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    const token = await login(email, password);
+    const result = await login(email, password);
 
     return res.status(200).json({
       success: true,
       message: "User logged in successfully",
-      data: token,
+      data: {
+        token: result.token,
+        userId: result.userId,
+      },
     });
   } catch (error) {
     next(error);
