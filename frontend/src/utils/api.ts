@@ -16,4 +16,22 @@ api.interceptors.request.use(async (config) => {
   }
 });
 
+// Materials
+export const uploadMaterial = async (file: File, title: string, subject: string) => {
+  const formData = new FormData();
+
+  formData.append("file", file);
+  formData.append("title", title);
+  formData.append("subject", subject);
+
+  const response = await api.post("/materials/upload", formData);
+
+  return response.data;
+};
+
+export const getMaterials = async () => {
+  const response = await api.get("/materials");
+  return response.data;
+};
+
 export default api;

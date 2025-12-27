@@ -7,6 +7,8 @@ export const uploadToCloudinary = (buffer, folder, fileName) => {
         resource_type: "auto",
         folder: folder,
         public_id: fileName,
+        type: "upload",
+        access_mode: "public",
       },
       (error, result) => {
         if (error) return reject(error);

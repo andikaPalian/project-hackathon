@@ -4,28 +4,62 @@ import {
   chatWithTutor,
   generateQuiz,
   generateQuizFromMaterial,
+  generateTopicsFromMaterial,
   summarizeMaterial,
 } from "../services/gemini.service.js";
-import { v2 as cloudinary } from "cloudinary";
 
 export const chatWithTutorController = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { messages, history } = req.body;
+    const { messages, history, materialId, topicId, mode } = req.body;
 
     const userDoc = await db.collection("users").doc(userId).get();
     const userData = userDoc.exists ? userDoc.data() : {};
+
+    // const materialDoc = await db.collection("materials").doc(materialId).get();
+    // const m = materialDoc.data();
+
+    let materialContext = "";
+
+    // LOGIKA KRITIS: Hanya panggil Firestore jika materialId valid
+    if (materialId && materialId !== "undefined" && materialId !== "null") {
+      const materialDoc = await db.collection("materials").doc(materialId).get();
+
+      if (materialDoc.exists) {
+        const m = materialDoc.data();
+
+        // Cari topik jika topicId ada
+        const specificTopic = topicId ? m.topics?.find((t) => t.title === topicId) : null;
+
+        materialContext = `
+          [DOKUMEN SUMBER: ${m.title}]
+          Isi Utama Materi: ${m.fullContent || m.summary || "Konten teks tidak tersedia"}
+          ${
+            specificTopic
+              ? `
+          [TOPIK AKTIF]
+          Judul: ${specificTopic.title}
+          Ringkasan: ${specificTopic.summary}
+          `
+              : ""
+          }
+        `;
+      }
+    }
 
     const userContext = {
       major: userData.major || "Umum",
       learningStyle: userData.learningStyle || "Text Biasa",
       goal: userData.goal || "Belajar Konsep",
+      mode: mode || "step-by-step",
+      materialInfo: materialContext,
     };
 
     const response = await chatWithTutor(messages, history, userContext);
 
     const chatRecord = {
       userId: userId,
+      // materialId: materialId && materialId !== "undefined" ? materialId : "general",
       messages: [
         {
           role: "users",
@@ -48,6 +82,7 @@ export const chatWithTutorController = async (req, res) => {
       data: response,
     });
   } catch (error) {
+    console.error("FATAL ERROR DI CONTROLLER:", error);
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -150,7 +185,7 @@ export const summarizeMaterialController = async (req, res) => {
     const userId = req.user.userId;
 
     const file = req.file;
-    const { title } = req.body;
+    const { title, subject } = req.body;
 
     if (!file) {
       return res.status(400).json({
@@ -161,7 +196,8 @@ export const summarizeMaterialController = async (req, res) => {
 
     const summary = await summarizeMaterial(file.buffer, file.mimetype);
 
-    const fileName = `${userId}-${Date.now()}-${file.originalname.split(".")[0]}`;
+    // const fileName = `${userId}-${Date.now()}-${file.originalname.split(".")[0]}`;
+    const fileName = `${userId}-${Date.now()}`;
 
     const cloudinaryResult = await uploadToCloudinary(file.buffer, "hackathon_materials", fileName);
 
@@ -173,14 +209,20 @@ export const summarizeMaterialController = async (req, res) => {
 
     // const base64FileData = file.buffer.toString("base64");
 
+    const statusEnum = ["belum_dimulai", "sedang_belajar", "dikuasai"];
+
     const materialRecord = {
       uploadedBy: userId,
       title: title || file.originalname,
+      subject: subject,
       summary: summary.summary,
       fullContent: summary.originalText,
       fileUrl: cloudinaryResult.secure_url,
       filePublicId: cloudinaryResult.public_id,
       fileType: file.mimetype,
+      status: statusEnum[0],
+      topics: [],
+      topicCount: 0,
       createdAt: new Date(),
     };
 

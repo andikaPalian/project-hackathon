@@ -40,7 +40,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         try {
           const token = currentUser.getIdToken();
 
-          const response = await api.get("/api/auth/me");
+          const response = await api.get("/auth/me");
 
           const backendUser = response.data.user;
 
@@ -106,7 +106,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         goal: data.goal,
       };
 
-      await api.post("/api/auth/onboarding", payload);
+      await api.post("/auth/onboarding", payload);
 
       const updatedUser = {
         ...user,

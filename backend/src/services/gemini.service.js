@@ -7,11 +7,29 @@ const officeParser = require("officeparser");
 
 export const chatWithTutor = async (messages, history, userContext) => {
   try {
+    // const chatSession = chatModel.startChat({
+    //   history: history || [],
+    // });
+
+    // materialId: materialId && materialId !== "undefined" ? materialId : null;
+
+    let safeHistory = (history || []).map((item) => ({
+      role: item.role === "assistant" ? "model" : "user",
+      parts: [{ text: item.content || item.text || "" }],
+    }));
+
+    
+    if (safeHistory.length > 0 && safeHistory[0].role === "model") {
+      safeHistory.shift();
+    }
+
     const chatSession = chatModel.startChat({
-      history: history || [],
+      history: safeHistory,
     });
 
     const prompt = `
+    ${userContext.materialInfo}
+
     [INFO USER]
     Jurusan: ${userContext.major}
     Gaya Belajar: ${userContext.learningStyle}
@@ -22,6 +40,13 @@ export const chatWithTutor = async (messages, history, userContext) => {
     - Jika gaya belajar 'Visual', berikan deskripsi imajinatif atau minta user membayangkan gambar.
     - Jika 'Step by step', gunakan poin-poin 1, 2, 3.
     - Hubungkan jawaban dengan jurusan mereka (${userContext.major}).
+    - Jika user bertanya tentang sesuatu yang tidak ada di dokumen, tetap bantu jelaskan menggunakan pengetahuanmu namun kaitkan dengan konteks materi tersebut.
+
+    [INSTRUKSI MODE TUTOR: ${userContext.mode}]
+    - Jika mode 'kayak-anak-sma': Gunakan bahasa santai, hindari istilah terlalu teknis, gunakan analogi sehari-hari.
+    - Jika mode 'ringkas': Berikan jawaban yang to-the-point dan hanya poin penting.
+    - Jika mode 'step-by-step': Pecah penjelasan menjadi langkah-langkah logis 1, 2, 3.
+    - Jika mode 'detail': Berikan penjelasan mendalam, teknis, dan komprehensif.
 
     [PERTANYAAN USER]
     ${messages}
@@ -106,7 +131,6 @@ export const generateQuizFromMaterial = async (
 
     if (mimeType === "application/pdf") {
       textContent = await extractTextFromPdf(fileData);
-      console.log("Berhasil membaca PDF, panjang teks:", textContent.length);
     } else if (
       mimeType === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
       mimeType === "application/vnd.ms-powerpoint"
@@ -117,7 +141,6 @@ export const generateQuizFromMaterial = async (
           else resolve(data);
         });
       });
-      console.log("Berhasil membaca PPT/PPTX, panjang teks:", textContent.length);
     } else {
       throw new Error("Unsupported file type for quiz generation.");
     }
@@ -163,13 +186,11 @@ export const generateQuizFromMaterial = async (
 
 export const summarizeMaterial = async (fileData, mimeType) => {
   try {
-    console.log("➡️ Menerima File. MIME Type:", mimeType);
 
     let textToSummarize = "";
 
     if (mimeType === "application/pdf") {
       textToSummarize = await extractTextFromPdf(fileData);
-      console.log("Berhasil membaca PDF, panjang teks:", textToSummarize.length);
     } else if (
       mimeType === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
       mimeType === "application/vnd.ms-powerpoint"
@@ -180,7 +201,6 @@ export const summarizeMaterial = async (fileData, mimeType) => {
           else resolve(data);
         });
       });
-      console.log("Berhasil membaca PPT/PPTX, panjang teks:", textToSummarize.length);
     } else {
       throw new Error("Unsupported file type for summarization.");
     }
@@ -220,6 +240,72 @@ export const summarizeMaterial = async (fileData, mimeType) => {
       summary: result.response.text(),
       originalText: textToSummarize,
     };
+  } catch (error) {
+    console.error("Summarization error: ", error);
+    throw new Error("Gagal meringkas materi. Coba lagi nanti ya!");
+  }
+};
+
+export const generateTopicsFromMaterial = async (fileData, mimeType) => {
+  try {
+    let textContent = "";
+    if (mimeType === "application/pdf") {
+      textContent = await extractTextFromPdf(fileData);
+    } else if (
+      mimeType === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+      mimeType === "application/vnd.ms-powerpoint"
+    ) {
+      textContent = await new Promise((resolve, reject) => {
+        officeParser.parseOffice(fileData, (data, err) => {
+          if (err) reject(err);
+          else resolve(data);
+        });
+      });
+    } else {
+      throw new Error("Unsupported file type for summarization.");
+    }
+
+    const prompt = `
+      Berdasarkan materi berikut ini, buatkan kurikulum belajar yang tersturktur:
+
+      [MATERI]
+      ${textContent.substring(0, 25000)}
+      [SELESAI]
+
+      Instruksi Output:
+      1. Wajib format JSON Array.
+      2. Jangan pakai markdown.
+      3. Struktur harus:
+      [
+        {
+          "title": "Judul Topik Utama",
+          "difficulty": "easy/medium/hard",
+          "mastery": 0,
+          "summary": "Ringkasan konsep singkat untuk topik ini (1 paragraf)",
+          "keyPoints": ["Poin 1", "Poin 2"],
+          "example": "Analogi atau contoh sederhana",
+          "confusionPoint": "Hal yang sering membingungkan",
+          "subtopics": [
+            { "title": "Sub Topik 1", "completed": false },
+            { "title": "Sub Topik 2", "completed": false }
+          ]
+        }
+      ]
+    `;
+
+    const result = await chatModel.generateContent(prompt);
+    let rawText = result.response.text();
+
+    rawText = rawText.replace(/```json/g, "").replace(/```/g, "");
+
+    const firstBracket = rawText.indexOf("[");
+    const lastBracket = rawText.lastIndexOf("]");
+
+    if (firstBracket === -1 || lastBracket === -1) {
+      rawText = rawText.substring(firstBracket, lastBracket + 1);
+    }
+
+    return JSON.parse(rawText);
   } catch (error) {
     console.error("Summarization error: ", error);
     throw new Error("Gagal meringkas materi. Coba lagi nanti ya!");

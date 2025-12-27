@@ -1,39 +1,39 @@
-import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { useUser } from '@/contexts/UserContext';
-import { 
-  BookOpen, 
-  GraduationCap, 
-  LayoutDashboard, 
-  FileText, 
-  MessageCircle, 
-  ClipboardList, 
-  TrendingUp, 
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useUser } from "@/contexts/UserContext";
+import {
+  BookOpen,
+  GraduationCap,
+  LayoutDashboard,
+  FileText,
+  MessageCircle,
+  ClipboardList,
+  TrendingUp,
   FileCheck,
   Menu,
   Settings,
   LogOut,
-  User
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+  User,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/materi', label: 'Materi', icon: FileText },
-  { href: '/belajar', label: 'Belajar', icon: MessageCircle },
-  { href: '/quiz', label: 'Quiz', icon: ClipboardList },
-  { href: '/progress', label: 'Progres', icon: TrendingUp },
-  { href: '/ringkasan', label: 'Ringkasan', icon: FileCheck },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/materi", label: "Materi", icon: FileText },
+  { href: "/belajar", label: "Belajar", icon: MessageCircle },
+  { href: "/quiz", label: "Quiz", icon: ClipboardList },
+  { href: "/progress", label: "Progres", icon: TrendingUp },
+  { href: "/ringkasan", label: "Ringkasan", icon: FileCheck },
 ];
 
 export function Navbar() {
@@ -44,16 +44,17 @@ export function Navbar() {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate("/");
   };
 
-  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
+  const isActive = (path: string) =>
+    location.pathname === path || location.pathname.startsWith(path + "/");
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link to={isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2">
+        <Link to={isAuthenticated ? "/dashboard" : "/"} className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-primary">
             <GraduationCap className="h-5 w-5 text-primary-foreground" />
           </div>
@@ -68,10 +69,10 @@ export function Navbar() {
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  'flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors',
+                  "flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors",
                   isActive(item.href)
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
               >
                 <item.icon className="h-4 w-4" />
@@ -91,7 +92,7 @@ export function Navbar() {
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                     <Avatar className="h-9 w-9">
                       <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                        {user?.name?.charAt(0) || 'U'}
+                        {user?.name?.charAt(0) || "U"}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -100,7 +101,7 @@ export function Navbar() {
                   <div className="flex items-center gap-2 p-2">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                        {user?.name?.charAt(0) || 'U'}
+                        {user?.name?.charAt(0) || "U"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
@@ -122,7 +123,10 @@ export function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="text-destructive cursor-pointer"
+                  >
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout
                   </DropdownMenuItem>
@@ -137,6 +141,11 @@ export function Navbar() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-72">
+                  <div className="sr-only">
+                    <SheetHeader>
+                      <SheetTitle>Menu Navigasi</SheetTitle>
+                    </SheetHeader>
+                  </div>
                   <nav className="flex flex-col gap-2 mt-8">
                     {navItems.map((item) => (
                       <Link
@@ -144,10 +153,10 @@ export function Navbar() {
                         to={item.href}
                         onClick={() => setMobileOpen(false)}
                         className={cn(
-                          'flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors',
+                          "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors",
                           isActive(item.href)
-                            ? 'bg-primary/10 text-primary'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
                         )}
                       >
                         <item.icon className="h-5 w-5" />

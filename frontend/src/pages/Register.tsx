@@ -32,17 +32,11 @@ export default function Register() {
         name: name,
       };
 
-      console.log("====================================");
-      console.log("DATA YANG AKAN DIKIRIM KE BACKEND:", payload);
-      console.log("====================================");
-
-      // 3. Validasi Manual di Frontend (Mencegah kirim data kosong)
       if (!name || name.trim() === "") {
         throw new Error("Nama tidak boleh kosong!");
       }
 
-      // 4. Kirim ke Backend
-      await api.post("/api/auth/register", payload);
+      await api.post("/auth/register", payload);
 
       toast.success("Akun berhasil dibuat!");
       navigate("/onboarding");
@@ -56,16 +50,11 @@ export default function Register() {
       toast.success("Akun berhasil dibuat!");
       navigate("/onboarding");
     } catch (error) {
-      // console.error(error);
       const errorMessage = error.response?.data?.message || "Registrasi gagal. Coba lagi.";
       toast.error(errorMessage);
 
-      console.error("Register Error:", error);
-
       // Cek pesan error dari Backend
       if (error.response) {
-        // Ini akan menampilkan pesan spesifik dari backend (misal: "Data tidak lengkap")
-        console.log("Respon Backend:", error.response.data);
         toast.error(error.response.data.message || "Gagal menyimpan data ke database.");
       } else if (error.code === "auth/email-already-in-use") {
         toast.error("Email ini sudah terdaftar. Silakan login.");

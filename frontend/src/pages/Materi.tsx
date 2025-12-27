@@ -1,34 +1,93 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Layout } from '@/components/layout/Layout';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GradientButton } from '@/components/ui/GradientButton';
-import { StatusBadge } from '@/components/ui/StatusBadge';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { mockMaterials, mataKuliahList } from '@/data/mockData';
-import { Search, Upload, Grid, List, FileText, Filter } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Layout } from "@/components/layout/Layout";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { GradientButton } from "@/components/ui/GradientButton";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { mataKuliahList } from "@/data/mockData";
+import { Search, Upload, Grid, List, FileText, Filter, CheckCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { uploadMaterial, getMaterials } from "@/utils/api";
 
 export default function Materi() {
-  const [view, setView] = useState<'grid' | 'list'>('grid');
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [view, setView] = useState<"grid" | "list">("grid");
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [judul, setJudul] = useState("");
+  const [mataKuliah, setMataKuliah] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
 
-  const filtered = mockMaterials.filter(m => {
+  const fetchMaterials = async () => {
+    try {
+      setLoadingData(true);
+      const response = await getMaterials();
+      setMaterials(response.data || response);
+    } catch (error) {
+      console.error("Error fetching materials: ", error);
+      toast.error("Failed to fetch materials.");
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMaterials();
+  }, []);
+
+  const filtered = materials.filter((m) => {
     const matchSearch = m.title.toLowerCase().includes(search.toLowerCase());
-    const matchFilter = filter === 'all' || m.mataKuliah === filter;
+    const subject = m.subject || m.mataKuliah;
+    const matchFilter = filter === "all" || subject === filter;
     return matchSearch && matchFilter;
   });
 
-  const handleUpload = () => {
-    toast.success('Materi berhasil diupload!');
-    setUploadOpen(false);
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      toast.error("Please select a file.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await uploadMaterial(selectedFile, judul, mataKuliah);
+      toast.success("Materi berhasil diupload!");
+
+      setUploadOpen(false);
+      setSelectedFile(null);
+      setJudul("");
+      setMataKuliah("");
+
+      fetchMaterials();
+    } catch (error) {
+      console.error("Error uploading material: ", error);
+      const message = error.response?.data?.message || "Failed to upload material.";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -41,19 +100,66 @@ export default function Materi() {
           </div>
           <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
             <DialogTrigger asChild>
-              <GradientButton><Upload className="h-4 w-4 mr-2" />Upload Materi</GradientButton>
+              <GradientButton>
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Materi
+              </GradientButton>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Upload Materi</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <DialogTitle>Upload Materi</DialogTitle>
+              </DialogHeader>
               <div className="space-y-4 mt-4">
-                <div className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-muted/50 transition-colors">
-                  <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                  <p className="font-medium">Drag & drop atau klik untuk upload</p>
-                  <p className="text-sm text-muted-foreground">PDF, PPT, PPTX (max 50MB)</p>
+                <div
+                  className={cn(
+                    "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-muted/50 transition-colors"
+                  )}
+                  onClick={() => document.getElementById("file-upload")?.click()}
+                >
+                  {selectedFile ? (
+                    <>
+                      <CheckCircle className="h-10 w-10 mx-auto text-green-500 mb-2" />
+                      <p className="font-medium text-green-700">{selectedFile.name}</p>
+                      <p className="text-xs text-green-600">
+                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                      <p className="font-medium">Drag & drop atau klik untuk upload</p>
+                      <p className="text-sm text-muted-foreground">PDF, PPT, PPTX (max 50MB)</p>
+                    </>
+                  )}
+
+                  <input
+                    type="file"
+                    id="file-upload"
+                    accept=".pdf,.ppt,.pptx"
+                    className="hidden"
+                    onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}
+                  />
                 </div>
-                <Select><SelectTrigger><SelectValue placeholder="Pilih Mata Kuliah" /></SelectTrigger><SelectContent>{mataKuliahList.map(mk => <SelectItem key={mk} value={mk}>{mk}</SelectItem>)}</SelectContent></Select>
-                <Input placeholder="Judul Materi" />
-                <GradientButton className="w-full" onClick={handleUpload}>Upload</GradientButton>
+                <Select value={mataKuliah} onValueChange={setMataKuliah}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Mata Kuliah" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mataKuliahList.map((mk) => (
+                      <SelectItem key={mk} value={mk}>
+                        {mk}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  placeholder="Judul Materi"
+                  value={judul}
+                  onChange={(e) => setJudul(e.target.value)}
+                />
+                <GradientButton className="w-full" onClick={handleUpload} disabled={loading}>
+                  {loading ? "Mengupload..." : "Upload"}
+                </GradientButton>
               </div>
             </DialogContent>
           </Dialog>
@@ -63,40 +169,90 @@ export default function Materi() {
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Cari materi..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+            <Input
+              placeholder="Cari materi..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
           </div>
           <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger className="w-full sm:w-48"><Filter className="h-4 w-4 mr-2" /><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-48">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Mata Kuliah</SelectItem>
-              {mataKuliahList.map(mk => <SelectItem key={mk} value={mk}>{mk}</SelectItem>)}
+              {mataKuliahList.map((mk) => (
+                <SelectItem key={mk} value={mk}>
+                  {mk}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <div className="flex border rounded-lg">
-            <Button variant={view === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => setView('grid')}><Grid className="h-4 w-4" /></Button>
-            <Button variant={view === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setView('list')}><List className="h-4 w-4" /></Button>
+            <Button
+              variant={view === "grid" ? "secondary" : "ghost"}
+              size="icon"
+              onClick={() => setView("grid")}
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={view === "list" ? "secondary" : "ghost"}
+              size="icon"
+              onClick={() => setView("list")}
+            >
+              <List className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
         {/* Content */}
         {filtered.length === 0 ? (
-          <EmptyState icon={<FileText className="h-8 w-8 text-muted-foreground" />} title="Belum ada materi" description="Upload PPT atau PDF pertamamu untuk mulai belajar." action={<GradientButton onClick={() => setUploadOpen(true)}><Upload className="h-4 w-4 mr-2" />Upload Materi</GradientButton>} />
+          <EmptyState
+            icon={<FileText className="h-8 w-8 text-muted-foreground" />}
+            title="Belum ada materi"
+            description="Upload PPT atau PDF pertamamu untuk mulai belajar."
+            action={
+              <GradientButton onClick={() => setUploadOpen(true)}>
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Materi
+              </GradientButton>
+            }
+          />
         ) : (
-          <div className={cn(view === 'grid' ? 'grid md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3')}>
-            {filtered.map(m => (
+          <div
+            className={cn(
+              view === "grid" ? "grid md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"
+            )}
+          >
+            {filtered.map((m) => (
               <Link key={m.id} to={`/materi/${m.id}`}>
                 <Card className="hover-lift h-full">
-                  <CardContent className={cn('p-4', view === 'list' && 'flex items-center justify-between')}>
-                    <div className={view === 'list' ? 'flex items-center gap-4' : ''}>
-                      <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center shrink-0', m.fileType === 'pdf' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning')}>
+                  <CardContent
+                    className={cn("p-4", view === "list" && "flex items-center justify-between")}
+                  >
+                    <div className={view === "list" ? "flex items-center gap-4" : ""}>
+                      <div
+                        className={cn(
+                          "h-10 w-10 rounded-lg flex items-center justify-center shrink-0",
+                          m.fileType === "pdf"
+                            ? "bg-destructive/10 text-destructive"
+                            : "bg-warning/10 text-warning"
+                        )}
+                      >
                         <FileText className="h-5 w-5" />
                       </div>
-                      <div className={view === 'grid' ? 'mt-3' : ''}>
+                      <div className={view === "grid" ? "mt-3" : ""}>
                         <p className="font-medium">{m.title}</p>
-                        <p className="text-sm text-muted-foreground">{m.mataKuliah} • {m.topicCount} topik</p>
+                        <p className="text-sm text-muted-foreground">
+                          {m.subject || m.mataKuliah ? `${m.subject || m.mataKuliah} • ` : ""}
+                          {m.topicCount || 0} topik
+                        </p>
                       </div>
                     </div>
-                    <StatusBadge status={m.status} className={view === 'grid' ? 'mt-3' : ''} />
+                    <StatusBadge status={m.status} className={view === "grid" ? "mt-3" : ""} />
                   </CardContent>
                 </Card>
               </Link>

@@ -25,7 +25,7 @@ export default function Login() {
     try {
       await login(email, password);
 
-      const response = await api.get("/api/auth/me");
+      const response = await api.get("/auth/me");
       const userData = response.data.user;
 
       toast.success("Selamat datang kembali!");
