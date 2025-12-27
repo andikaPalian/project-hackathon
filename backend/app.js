@@ -7,6 +7,7 @@ import { authRouter } from "./src/routes/auth.routes.js";
 import { geminiRouter } from "./src/routes/gemini.routes.js";
 import { connectCloudinary } from "./src/config/cloudinary.js";
 import { materialRouter } from "./src/routes/material.routes.js";
+import { quizRouter } from "./src/routes/quiz.routes.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -21,6 +22,7 @@ app.use(morgan("dev"));
 app.use("/api/auth", authRouter);
 app.use("/api/ai", geminiRouter);
 app.use("/api/materials", materialRouter);
+app.use("/api/quiz", quizRouter);
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
