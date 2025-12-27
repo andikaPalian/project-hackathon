@@ -18,7 +18,6 @@ export const chatWithTutor = async (messages, history, userContext) => {
       parts: [{ text: item.content || item.text || "" }],
     }));
 
-    
     if (safeHistory.length > 0 && safeHistory[0].role === "model") {
       safeHistory.shift();
     }
@@ -94,7 +93,7 @@ export const generateQuiz = async (topic, difficulty, userContext, amount = 5) =
     const result = await quizModel.generateContent(prompt);
     let rawText = result.response.text();
 
-    rawText = rawText.replace(/```json/g, "").replace(/```/g, "");
+    // rawText = rawText.replace(/```json/g, "").replace(/```/g, "");
 
     const firstBracket = rawText.indexOf("[");
     const lastBracket = rawText.lastIndexOf("]");
@@ -103,7 +102,12 @@ export const generateQuiz = async (topic, difficulty, userContext, amount = 5) =
       rawText = rawText.substring(firstBracket, lastBracket + 1);
     }
 
-    return JSON.parse(rawText);
+    let cleanJson = rawText.substring(firstBracket, lastBracket + 1);
+
+    // 3. Tambahan: Hapus jika ada karakter aneh yang tersisa
+    cleanJson = cleanJson.trim();
+
+    return JSON.parse(cleanJson);
   } catch (error) {
     console.error("Quiz generation error: ", error);
     throw new Error("Gagal membuat kuis. Coba ganti topik atau tingkat kesulitan.");
@@ -186,7 +190,6 @@ export const generateQuizFromMaterial = async (
 
 export const summarizeMaterial = async (fileData, mimeType) => {
   try {
-
     let textToSummarize = "";
 
     if (mimeType === "application/pdf") {

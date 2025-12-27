@@ -93,7 +93,7 @@ export const chatWithTutorController = async (req, res) => {
 export const generateQuizController = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { topic, difficulty, amount } = req.body;
+    const { topic, difficulty, amount, materialId } = req.body;
 
     const userDoc = await db.collection("users").doc(userId).get();
     const userData = userDoc.exists ? userDoc.data() : {};
@@ -103,14 +103,25 @@ export const generateQuizController = async (req, res) => {
       goal: userData.goal || "Latihan",
     };
 
+    let finalTopic = topic;
+    if (materialId && (!topic || topic === "")) {
+      const matDoc = await db.collection("materials").doc(materialId).get();
+      if (matDoc.exists) {
+        finalTopic = matDoc.data().title;
+      }
+    }
+
+    finalTopic = finalTopic || "Topik Umum";
+
     const quiz = await generateQuiz(topic, difficulty, userContext, amount);
 
     const quizRecord = {
-      topic: topic,
+      topic: finalTopic,
       difficulty: difficulty,
       generatedBy: userId,
       questions: quiz,
       createdAt: new Date(),
+      lastScore: null,
     };
 
     const docRef = await db.collection("quizzes").add(quizRecord);
@@ -121,6 +132,7 @@ export const generateQuizController = async (req, res) => {
       data: quiz,
     });
   } catch (error) {
+    console.error("FATAL ERROR DI CONTROLLER:", error);
     return res.status(500).json({
       success: false,
       message: error.message,
