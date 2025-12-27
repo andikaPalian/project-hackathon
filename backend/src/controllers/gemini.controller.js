@@ -116,6 +116,7 @@ export const generateQuizController = async (req, res) => {
     const quiz = await generateQuiz(topic, difficulty, userContext, amount);
 
     const quizRecord = {
+      title: finalTopic,
       topic: finalTopic,
       difficulty: difficulty,
       generatedBy: userId,

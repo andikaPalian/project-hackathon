@@ -75,7 +75,13 @@ export default function Quiz() {
                       <div className="h-10 w-10 rounded-lg gradient-primary flex items-center justify-center">
                         <ClipboardList className="h-5 w-5 text-primary-foreground" />
                       </div>
-                      <StatusBadge status={quiz.difficulty} />
+                      <StatusBadge
+                        status={
+                          quiz.lastScore !== null && quiz.lastScore !== undefined
+                            ? "Selesai" 
+                            : quiz.difficulty
+                        }
+                      />
                     </div>
                     <h3 className="font-medium mt-3">{quiz.title}</h3>
                     <p className="text-sm text-muted-foreground">
