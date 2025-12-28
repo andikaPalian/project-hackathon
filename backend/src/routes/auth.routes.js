@@ -3,12 +3,14 @@ import {
   getMeController,
   loginController,
   registerController,
+  updateProfileController,
 } from "../controllers/auth.controller.js";
 import { validateBody } from "../middlewares/zodValidator.js";
 // import { loginSchema, registerSchema } from "../validator/authValidator.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 import { onboardingSchema } from "../validator/onboardingValidator.js";
 import { onboardingUserController } from "../controllers/onboarding.controller.js";
+import { uploadImage } from "../middlewares/uploadImage.js";
 
 export const authRouter = express.Router();
 
@@ -23,3 +25,4 @@ authRouter.post(
   validateBody(onboardingSchema),
   onboardingUserController
 );
+authRouter.patch("/profile", verifyToken, uploadImage, updateProfileController);

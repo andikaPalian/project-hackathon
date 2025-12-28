@@ -20,7 +20,6 @@ export const connectCloudinary = () => {
 
     console.log("Cloudinary connected");
   } catch (error) {
-    console.error("Error connecting to cloudinary: ", error);
     process.exit(1);
   }
 };

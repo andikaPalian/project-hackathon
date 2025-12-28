@@ -29,7 +29,7 @@ import axios from "axios";
 //     if (error.code === "auth/email-already-exists") {
 //       throw new AppError("Email already in use", 400);
 //     }
-//     console.error("Error registering user: ", error);
+//     ("Error registering user: ", error);
 //     throw error;
 //   }
 // };
@@ -52,12 +52,14 @@ export const createUser = async (uid, userData) => {
       subjects: [],
       learningStyle: "",
       goal: [],
+      streakCount: 0,
+      lastActivityDate: null,
+      totalPoints: 0,
       createdAt: new Date().toISOString(),
     });
 
     return { success: true };
   } catch (error) {
-    console.error("Error creating user: ", error);
     throw error;
   }
 };
@@ -72,7 +74,6 @@ export const getUserProfile = async (userId) => {
 
     return userDoc.data();
   } catch (error) {
-    console.error("Error fetching user profile: ", error);
     throw error;
   }
 };
@@ -101,7 +102,6 @@ export const login = async (email, password) => {
     };
   } catch (error) {
     // Handle the error
-    console.error("Error login user: ", error);
     throw error;
   }
 };

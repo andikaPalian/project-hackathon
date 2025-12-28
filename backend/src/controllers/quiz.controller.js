@@ -1,4 +1,5 @@
 import { db } from "../config/firebase.js";
+import { updateStreak } from "../utils/streak.js";
 
 export const getUserQuizzesController = async (req, res) => {
   try {
@@ -27,7 +28,6 @@ export const getUserQuizzesController = async (req, res) => {
       data: quizzes,
     });
   } catch (error) {
-    console.error(error);
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -54,6 +54,7 @@ export const getQuizByIdController = async (req, res) => {
 
 export const updateQuizScoreController = async (req, res) => {
   try {
+    const userId = req.user.userId;
     const { quizId } = req.params;
     const { score } = req.body;
 
@@ -90,6 +91,8 @@ export const updateQuizScoreController = async (req, res) => {
         updatedAt: new Date(),
       });
     }
+
+    await updateStreak(userId);
 
     return res.status(200).json({
       success: true,

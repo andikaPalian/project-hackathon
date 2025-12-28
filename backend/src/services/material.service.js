@@ -56,7 +56,6 @@ export const createMaterial = async (userId, file, title, subject) => {
 
     return { success: true };
   } catch (error) {
-    console.error("Error creating material: ", error);
     throw new Error("Failed to create material.");
   }
 };
@@ -80,7 +79,6 @@ export const getMaterialByUser = async (userId) => {
 
     return materials;
   } catch (error) {
-    console.error("Error getting material by user: ", error);
     throw new Error("Failed to get material by user.");
   }
 };
@@ -103,7 +101,6 @@ export const getMaterialById = async (materialId, userId) => {
       ...data,
     };
   } catch (error) {
-    console.error("Error getting material by id: ", error);
     throw new Error("Failed to get material by id.");
   }
 };

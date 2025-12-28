@@ -82,7 +82,6 @@ export const chatWithTutorController = async (req, res) => {
       data: response,
     });
   } catch (error) {
-    console.error("FATAL ERROR DI CONTROLLER:", error);
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -140,7 +139,6 @@ export const generateQuizController = async (req, res) => {
       data: quiz,
     });
   } catch (error) {
-    console.error("FATAL ERROR DI CONTROLLER:", error);
     return res.status(500).json({
       success: false,
       message: error.message,

@@ -1,3 +1,5 @@
+import { db } from "../config/firebase.js";
+import { uploadToCloudinary } from "../helper/uploadFile.js";
 import { createUser, getUserProfile } from "../services/auth.service.js";
 
 // export const registerController = async (req, res, next) => {
@@ -88,6 +90,40 @@ export const getMeController = async (req, res) => {
       success: false,
       message: error.message,
     });
+  }
+};
+
+export const updateProfileController = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { name, learningStyle } = req.body;
+    const profilePicture = req.file;
+
+    let profilePicUrl;
+
+    const fileName = `${userId}-${Date.now()}`;
+
+    if (profilePicture) {
+      const result = await uploadToCloudinary(profilePicture.buffer, "profilePictures", fileName, true);
+
+      profilePicUrl = result.secure_url;
+    }
+
+    const updateData = {
+      name,
+      learningStyle,
+      profilePicture: profilePicUrl,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await db.collection("users").doc(userId).update(updateData);
+
+    return res.status(200).json({
+      success: true,
+      data: updateData,
+    });
+  } catch (error) {
+    return res.status(500).json({});
   }
 };
 

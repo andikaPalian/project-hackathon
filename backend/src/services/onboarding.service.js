@@ -16,7 +16,6 @@ export const onboardingUser = async (userId, onboardingData) => {
 
     return { success: true };
   } catch (error) {
-    console.error("Onboarding error: ", error);
     throw new Error("Gagal melakukan onboarding. Silakan coba lagi.");
   }
 };

@@ -19,8 +19,6 @@ export const verifyToken = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error("Auth Error: ", error.code, error.message);
-
     if (error.code === "auth/id-token-expired") {
       return res.status(401).json({
         success: false,

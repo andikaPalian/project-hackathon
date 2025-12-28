@@ -55,7 +55,6 @@ export const chatWithTutor = async (messages, history, userContext) => {
 
     return result.response.text();
   } catch (error) {
-    console.error("Chat error: ", error);
     throw new Error("Duh, arte lagi mikir keras. Coba lagi nanti ya!");
   }
 };
@@ -108,7 +107,6 @@ export const generateQuiz = async (topic, difficulty, userContext, amount = 5) =
 
     return JSON.parse(cleanJson);
   } catch (error) {
-    console.error("Quiz generation error: ", error);
     throw new Error("Gagal membuat kuis. Coba ganti topik atau tingkat kesulitan.");
   }
 };
@@ -182,7 +180,6 @@ export const generateQuizFromMaterial = async (
 
     return JSON.parse(rawText);
   } catch (error) {
-    console.error("Quiz from material error: ", error);
     throw new Error("Gagal membuat kuis dari materi. Coba lagi nanti ya!");
   }
 };
@@ -287,7 +284,6 @@ export const summarizeMaterial = async (fileData, mimeType, textContent = null) 
       originalText: textToSummarize,
     };
   } catch (error) {
-    console.error("Summarization error: ", error);
     throw new Error("Gagal meringkas materi. Coba lagi nanti ya!");
   }
 };
@@ -357,7 +353,6 @@ export const generateTopicsFromMaterial = async (fileData, mimeType) => {
 
     return JSON.parse(rawText);
   } catch (error) {
-    console.error("Summarization error: ", error);
     throw new Error("Gagal meringkas materi. Coba lagi nanti ya!");
   }
 };

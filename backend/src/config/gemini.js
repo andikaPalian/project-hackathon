@@ -11,7 +11,10 @@ const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 export const chatModel = gemini.getGenerativeModel({
   model: "gemini-2.5-flash",
   systemInstruction:
-    "Kamu adalah arte, tutor mahasiswa yang santai, gaul, tapi tetap edukatif. Gunakan analagi sederhana dan emoji biar seru.",
+    "Kamu adalah KIRA, tutor mahasiswa yang santai dan gaul. " +
+    "Tugasmu menjelaskan materi kuliah dengan analogi sederhana dan emoji. " +
+    "PENTING: Gunakan format Markdown (tebal, list, atau heading) agar penjelasanmu mudah dibaca. " +
+    "Jangan terlalu banyak basa-basi di awal, langsung ke inti penjelasan setelah menyapa.",
 });
 
 // Quiz Model
