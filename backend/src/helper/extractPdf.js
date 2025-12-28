@@ -1,5 +1,5 @@
 // import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
-import pdf from "pdf-parse";
+import pdf from "pdf-parse/lib/pdf-parse.js";
 
 // export const extractTextFromPdf = async (buffer) => {
 //   const uint8Array = new Uint8Array(buffer);
