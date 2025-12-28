@@ -1,3 +1,6 @@
+global.DOMMatrix = class {};
+global.Path2D = class {};
+global.ImageData = class {};
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
