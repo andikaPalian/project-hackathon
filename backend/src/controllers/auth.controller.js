@@ -1,6 +1,7 @@
 import { db } from "../config/firebase.js";
 import { uploadToCloudinary } from "../helper/uploadFile.js";
 import { createUser, getUserProfile } from "../services/auth.service.js";
+import admin from "../config/firebase.js";
 
 // export const registerController = async (req, res, next) => {
 //   try {
@@ -104,7 +105,12 @@ export const updateProfileController = async (req, res) => {
     const fileName = `${userId}-${Date.now()}`;
 
     if (profilePicture) {
-      const result = await uploadToCloudinary(profilePicture.buffer, "profilePictures", fileName, true);
+      const result = await uploadToCloudinary(
+        profilePicture.buffer,
+        "profilePictures",
+        fileName,
+        true
+      );
 
       profilePicUrl = result.secure_url;
     }
@@ -145,3 +151,47 @@ export const updateProfileController = async (req, res) => {
 //     next(error);
 //   }
 // };
+
+export const googleLogin = async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const { uid, email, name, picture } = decodedToken;
+
+    const userRef = db.collection("users").doc(uid);
+    const userDoc = await userRef.get();
+
+    let userData;
+
+    if (!userDoc.exists) {
+      userData = {
+        id: uid,
+        email: email,
+        name: name || "User Google",
+        avatar: picture || "",
+        major: "",
+        learningStyle: "",
+        onboardingCompleted: false,
+        createdAt: new Date().toISOString(),
+        streak: 0,
+        totalMastery: 0,
+      };
+      await userRef.set(userData);
+    } else {
+      userData = userDoc.data();
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "Google login successful",
+      user: userData,
+    });
+  } catch (error) {
+    console.error("🚨 Error Google Verify:", error.message);
+    res.status(401).json({
+      status: "error",
+      message: "Invalid or expired Google token",
+    });
+  }
+};

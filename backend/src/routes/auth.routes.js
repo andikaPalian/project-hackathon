@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getMeController,
+  googleLogin,
   loginController,
   registerController,
   updateProfileController,
@@ -26,3 +27,4 @@ authRouter.post(
   onboardingUserController
 );
 authRouter.patch("/profile", verifyToken, uploadImage, updateProfileController);
+authRouter.post("/google", googleLogin);
