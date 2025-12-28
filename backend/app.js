@@ -43,4 +43,12 @@ app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
 
+app.get("/", (req, res) => {
+  res.json({
+    status: "success",
+    message: "KIRA API is running smoothly!",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 export default app;
