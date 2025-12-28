@@ -48,7 +48,6 @@ export default function Onboarding() {
       toast.success("Setup selesai| Selamat belajar!");
       navigate("/dashboard");
     } catch (error) {
-      console.error("Onboarding error: ", error);
       toast.error("Gagal menyimpan data. Silakan coba lagi.");
     } finally {
       setIsSubmitting(false);
@@ -201,7 +200,7 @@ export default function Onboarding() {
                   Tujuan Belajar{" "}
                   <span className="text-muted-foreground font-normal">(opsional)</span>
                 </h2>
-                <p className="text-muted-foreground mb-4">Apa yang ingin kamu capai dengan KARI?</p>
+                <p className="text-muted-foreground mb-4">Apa yang ingin kamu capai dengan KIRA?</p>
                 <div className="space-y-2">
                   {tujuanOptions.map((t) => (
                     <Card

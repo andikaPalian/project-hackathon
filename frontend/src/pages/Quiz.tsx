@@ -74,7 +74,7 @@ export default function Quiz() {
               return (
                 <Link
                   key={quiz.id}
-                  to={isFinished ? `/quiz/result/${quiz.id}` : `/quiz/take/${quiz.id}`}
+                  to={isFinished ? `/quiz/result/${quiz.id}` : `/quiz/${quiz.id}`}
                 >
                   <Card
                     className={cn(

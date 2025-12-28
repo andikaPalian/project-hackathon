@@ -45,7 +45,6 @@ export default function Materi() {
       const response = await getMaterials();
       setMaterials(response.data || response);
     } catch (error) {
-      console.error("Error fetching materials: ", error);
       toast.error("Failed to fetch materials.");
     } finally {
       setLoadingData(false);
@@ -82,7 +81,6 @@ export default function Materi() {
 
       fetchMaterials();
     } catch (error) {
-      console.error("Error uploading material: ", error);
       const message = error.response?.data?.message || "Failed to upload material.";
       toast.error(message);
     } finally {

@@ -74,7 +74,7 @@ export default function Register() {
             <div className="mx-auto mb-4 h-12 w-12 rounded-xl gradient-primary flex items-center justify-center">
               <GraduationCap className="h-6 w-6 text-primary-foreground" />
             </div>
-            <CardTitle className="text-2xl">Daftar ke KARI</CardTitle>
+            <CardTitle className="text-2xl">Daftar ke KIRA</CardTitle>
             <CardDescription>Mulai perjalanan belajar yang lebih terarah</CardDescription>
           </CardHeader>
           <CardContent>

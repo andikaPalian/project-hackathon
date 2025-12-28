@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* KARI Cool Purple Theme */
+    /* KIRA Cool Purple Theme */
     --background: 0 0% 100%;
     --foreground: 240 10% 15%;
 
@@ -108,7 +108,12 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-semibold tracking-tight;
   }
 }

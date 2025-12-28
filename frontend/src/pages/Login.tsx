@@ -50,7 +50,7 @@ export default function Login() {
             <div className="mx-auto mb-4 h-12 w-12 rounded-xl gradient-primary flex items-center justify-center">
               <GraduationCap className="h-6 w-6 text-primary-foreground" />
             </div>
-            <CardTitle className="text-2xl">Masuk ke KARI</CardTitle>
+            <CardTitle className="text-2xl">Masuk ke KIRA</CardTitle>
             <CardDescription>Lanjutkan perjalanan belajarmu</CardDescription>
           </CardHeader>
           <CardContent>
@@ -60,7 +60,7 @@ export default function Login() {
                 variant="outline"
                 className="w-full"
                 onClick={() => {
-                  login("demo@kari.app", "demo");
+                  login("demo@KIRA.app", "demo");
                   navigate("/dashboard");
                 }}
               >

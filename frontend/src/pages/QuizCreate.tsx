@@ -68,7 +68,7 @@ export default function QuizCreate() {
         navigate(`/quiz/${response.data.quizId}`);
       }
     } catch (error) {
-      console.error(error);
+      error;
       toast.error(error.response?.data?.message || "Failed to create quiz.");
     } finally {
       setIsLoading(false);

@@ -65,7 +65,7 @@ export default function QuizTake() {
         await api.patch(`/quiz/${quizId}/score`, { score: finalScore });
         toast.success("Progres belajar berhasil disimpan!");
       } catch (e) {
-        console.error("Gagal simpan skor");
+        ("Gagal simpan skor");
         toast.error("Gagal menyimpan hasil kuis.");
       }
       setFinished(true);

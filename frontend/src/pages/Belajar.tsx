@@ -11,8 +11,11 @@ import { Send, Bot, User, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/utils/api";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
+import { useUser } from "@/contexts/UserContext";
 
 export default function Belajar() {
+  const { user } = useUser();
   const { materialId, topicId } = useParams();
   const [material, setMaterial] = useState<any>(null);
   const [activeTopic, setActiveTopic] = useState<any>(null);
@@ -33,7 +36,7 @@ export default function Belajar() {
         const welcomeMsg: ChatMessage = {
           id: "welcome",
           role: "assistant",
-          content: "Halo! Saya Kari, asisten belajarmu. Ada yang bisa saya bantu hari ini?",
+          content: "Halo! Saya KIRA, asisten belajarmu. mau belajar apa hari ini?",
           timestamp: new Date().toLocaleTimeString(),
         };
         setMessages([welcomeMsg]);
@@ -79,14 +82,12 @@ export default function Belajar() {
     setIsTyping(true);
 
     try {
-      // Susun history untuk Gemini
       const history = messages.map((m) => ({
         role: m.role === "assistant" ? "model" : "user",
         content: m.content,
         parts: [{ text: m.content }],
       }));
 
-      // Panggil Backend
       const response = await api.post("/ai/chat", {
         messages: text,
         history: history,
@@ -116,7 +117,7 @@ export default function Belajar() {
         {/* Area Chat Utama */}
         <div className="flex-1 flex flex-col min-w-0 bg-background">
           <ScrollArea className="flex-1 p-4">
-            <div className="max-w-3xl mx-auto space-y-4">
+            <div className="max-w-3xl mx-auto space-y-4 pb-4">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -124,12 +125,19 @@ export default function Belajar() {
                 >
                   <div
                     className={cn(
-                      "h-8 w-8 rounded-full flex items-center justify-center shrink-0",
+                      "h-8 w-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden border",
                       msg.role === "assistant" ? "gradient-primary text-white" : "bg-muted"
                     )}
                   >
                     {msg.role === "assistant" ? (
                       <Bot className="h-4 w-4" />
+                    ) : 
+                    user?.profilePicture ? (
+                      <img
+                        src={user.profilePicture}
+                        alt="Me"
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
                       <User className="h-4 w-4" />
                     )}
@@ -138,15 +146,30 @@ export default function Belajar() {
                     className={cn(
                       "max-w-[85%] rounded-2xl px-4 py-3 shadow-sm",
                       msg.role === "assistant"
-                        ? "bg-muted/50 border"
+                        ? "bg-muted/50 border text-foreground"
                         : "gradient-primary text-primary-foreground"
                     )}
                   >
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed">{msg.content}</p>
-                    <p className="text-[10px] mt-1 opacity-70">{msg.timestamp}</p>
+                    <div
+                      className={cn(
+                        "text-sm leading-relaxed prose prose-sm max-w-none",
+                        msg.role === "user" ? "prose-invert" : "prose-neutral"
+                      )}
+                    >
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
+                    <p
+                      className={cn(
+                        "text-[10px] mt-1 opacity-70 italic",
+                        msg.role === "user" ? "text-right" : "text-left"
+                      )}
+                    >
+                      {msg.timestamp}
+                    </p>
                   </div>
                 </div>
               ))}
+
               {isTyping && (
                 <div className="flex gap-3">
                   <div className="h-8 w-8 rounded-full gradient-primary flex items-center justify-center text-white">
@@ -174,7 +197,7 @@ export default function Belajar() {
                     key={p}
                     variant="outline"
                     size="sm"
-                    className="shrink-0 rounded-full"
+                    className="shrink-0 rounded-full text-xs"
                     onClick={() => sendMessage(p)}
                   >
                     {p}
@@ -192,7 +215,7 @@ export default function Belajar() {
                   placeholder="Tanya sesuatu tentang materi ini..."
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  className="rounded-full px-6"
+                  className="rounded-full px-6 focus-visible:ring-primary"
                 />
                 <Button
                   type="submit"
@@ -207,26 +230,26 @@ export default function Belajar() {
           </div>
         </div>
 
-        {/* Sidebar Kanan: Konteks & Mode */}
+        {/* Sidebar Kanan */}
         <aside className="hidden lg:flex w-80 border-l flex-col p-4 gap-4 bg-muted/10">
           {material ? (
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground">
+                <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground">
                   Konteks Belajar
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <p className="font-bold text-primary leading-tight">
+                  <p className="font-bold text-sm text-primary leading-tight">
                     {activeTopic?.title || topicId}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                  <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1">
                     {material.title}
                   </p>
                 </div>
                 <ProgressBar value={activeTopic?.mastery || 0} size="sm" showLabel />
-                <Button variant="ghost" size="sm" className="w-full text-xs" asChild>
+                <Button variant="ghost" size="sm" className="w-full text-[11px] h-8" asChild>
                   <Link to={`/materi/${materialId}`}>
                     <ArrowLeft className="h-3 w-3 mr-2" /> Kembali ke Detail
                   </Link>
@@ -237,14 +260,14 @@ export default function Belajar() {
             <Card className="border-dashed">
               <CardContent className="pt-6 text-center space-y-2">
                 <Bot className="h-8 w-8 mx-auto text-muted-foreground opacity-50" />
-                <p className="text-sm font-medium">Tanya Jawab Umum</p>
+                <p className="text-xs font-medium">Tanya Jawab Umum</p>
               </CardContent>
             </Card>
           )}
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground">
+              <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 Mode Tutor
               </CardTitle>
             </CardHeader>
@@ -260,7 +283,7 @@ export default function Belajar() {
                   onClick={() => setMode(m.id)}
                 >
                   <div className="truncate">
-                    <p className="font-semibold text-xs">{m.label}</p>
+                    <p className="font-semibold text-[11px]">{m.label}</p>
                     <p className="text-[10px] text-muted-foreground truncate">{m.description}</p>
                   </div>
                 </Button>

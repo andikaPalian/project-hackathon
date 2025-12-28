@@ -48,7 +48,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
           setIsOnboarded(!!backendUser.onboardingCompleted);
 
-          // localStorage.setItem("kari_user", JSON.stringify(backendUser));
+          localStorage.setItem("KIRA_user", JSON.stringify(backendUser));
         } catch (error) {
           if (error.response && error.response.status === 404) {
             console.log("User terdaftar di Firebase tapi belum ada di DB (Proses Register).");
@@ -58,7 +58,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       } else {
         setUser(null);
         setIsOnboarded(false);
-        localStorage.removeItem("kari_user");
+        localStorage.removeItem("KIRA_user");
       }
       setLoading(false);
     });
@@ -74,7 +74,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     const newUser: User = {
       id: result.user.uid,
-      username: username,
+      name: username,
       email: email,
       major: "",
       subjects: [],
@@ -93,7 +93,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     await signOut(auth);
     setUser(null);
     setIsOnboarded(false);
-    localStorage.removeItem("kari_user");
+    localStorage.removeItem("KIRA_user");
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -120,14 +120,21 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setUser(updatedUser);
       setIsOnboarded(true);
 
-      localStorage.setItem("kari_user", JSON.stringify(updatedUser));
+      localStorage.setItem("KIRA_user", JSON.stringify(updatedUser));
     }
   };
 
   const updateUser = (data: Partial<User>) => {
-    if (user) {
-      setUser({ ...user, ...data } as User);
-    }
+    setUser((prevUser) => {
+      if (!prevUser) return null;
+
+      const updated = { ...prevUser, ...data };
+
+      // Simpan ke localStorage agar data persisten saat refresh
+      localStorage.setItem("KIRA_user", JSON.stringify(updated));
+
+      return updated;
+    });
   };
 
   return (

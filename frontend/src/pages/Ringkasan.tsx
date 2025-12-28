@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import api from "@/utils/api";
 import jsPDF from "jspdf";
 import { cn } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
 
 export default function Ringkasan() {
   const [mataKuliahList, setMataKuliahList] = useState<string[]>([]);
@@ -69,6 +70,8 @@ export default function Ringkasan() {
 
   const filteredMaterials = allMaterials.filter((m) => m.subject === mataKuliah);
 
+  const cleanMarkdown = (text: string) => text.replace(/\*\*|\*/g, "");
+
   const handleExportPDF = () => {
     if (!summaryContent) return;
 
@@ -78,12 +81,11 @@ export default function Ringkasan() {
     // Title
     doc.setFontSize(18);
     doc.setTextColor(40, 40, 40);
-    doc.text(summaryContent.title || "Ringkasan Materi", 10, cursorY);
+    doc.text(cleanMarkdown(summaryContent.title || "Ringkasan Materi"), 10, cursorY);
     cursorY += 15;
 
     // Sections
     summaryContent.sections?.forEach((section: any) => {
-      // Cek sisa halaman, jika mepet buat halaman baru
       if (cursorY > 270) {
         doc.addPage();
         cursorY = 20;
@@ -91,20 +93,20 @@ export default function Ringkasan() {
 
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
-      doc.text(section.title, 10, cursorY);
+      doc.text(cleanMarkdown(section.title), 10, cursorY);
       cursorY += 7;
 
       doc.setFontSize(11);
       doc.setFont("helvetica", "normal");
       section.points?.forEach((point: string) => {
-        const splitPoint = doc.splitTextToSize(`• ${point}`, 180);
+        const cleanedPoint = cleanMarkdown(point);
+        const splitPoint = doc.splitTextToSize(`• ${cleanedPoint}`, 180);
         doc.text(splitPoint, 15, cursorY);
         cursorY += splitPoint.length * 6;
       });
       cursorY += 5;
     });
 
-    // Checklist Header
     if (cursorY > 250) {
       doc.addPage();
       cursorY = 20;
@@ -114,11 +116,10 @@ export default function Ringkasan() {
     doc.text("Checklist Persiapan Ujian:", 10, cursorY);
     cursorY += 8;
 
-    // Checklist items
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
     summaryContent.checklist?.forEach((item: string) => {
-      doc.text(`[ ] ${item}`, 15, cursorY);
+      doc.text(`[ ] ${cleanMarkdown(item)}`, 15, cursorY);
       cursorY += 7;
     });
 
@@ -262,8 +263,8 @@ export default function Ringkasan() {
               </CardHeader>
               <CardContent className="p-6">
                 {typeof summaryContent === "string" ? (
-                  <div className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-                    {summaryContent}
+                  <div className="prose prose-sm max-w-none text-muted-foreground leading-relaxed">
+                    <ReactMarkdown>{summaryContent}</ReactMarkdown>
                   </div>
                 ) : (
                   <div className="space-y-8">
@@ -278,7 +279,10 @@ export default function Ringkasan() {
                               key={j}
                               className="text-muted-foreground flex items-start gap-2 text-sm"
                             >
-                              <span className="text-primary mt-1">•</span> {p}
+                              <span className="text-primary mt-1">•</span>
+                              <div className="flex-1 prose-sm">
+                                <ReactMarkdown>{p}</ReactMarkdown>
+                              </div>
                             </li>
                           ))}
                         </ul>
@@ -314,7 +318,7 @@ export default function Ringkasan() {
                           checked.includes(item) && "line-through text-muted-foreground"
                         )}
                       >
-                        {item}
+                        <ReactMarkdown>{item}</ReactMarkdown>
                       </label>
                     </div>
                   ))}
