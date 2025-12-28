@@ -64,11 +64,32 @@ export const updateQuizScoreController = async (req, res) => {
       });
     }
 
+    const quizDoc = await db.collection("quizzes").doc(quizId).get();
+    if (!quizDoc.exists) {
+      return res.status(404).json({
+        success: false,
+        message: "Quiz not found",
+      });
+    }
+
+    const quizData = quizDoc.data();
+    const materialId = quizData.materialId;
+
     await db.collection("quizzes").doc(quizId).update({
       lastScore: score,
       updatedAt: new Date(),
       status: "selesai",
     });
+
+    if (materialId) {
+      const newStatus = score >= 80 ? "dikuasai" : "sedang_belajar";
+
+      await db.collection("materials").doc(materialId).update({
+        status: newStatus,
+        lastScore: score,
+        updatedAt: new Date(),
+      });
+    }
 
     return res.status(200).json({
       success: true,

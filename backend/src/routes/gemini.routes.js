@@ -4,6 +4,7 @@ import {
   chatWithTutorController,
   generateQuizController,
   generateQuizFromMaterialController,
+  generateSummarizeFromMaterial,
   summarizeMaterialController,
 } from "../controllers/gemini.controller.js";
 import { uploadMaterial } from "../middlewares/multer.js";
@@ -14,3 +15,4 @@ geminiRouter.post("/chat", verifyToken, chatWithTutorController);
 geminiRouter.post("/quiz", verifyToken, generateQuizController);
 geminiRouter.post("/quiz/upload", verifyToken, uploadMaterial, generateQuizFromMaterialController);
 geminiRouter.post("/summarize", verifyToken, uploadMaterial, summarizeMaterialController);
+geminiRouter.post("/summarize-material", verifyToken, generateSummarizeFromMaterial);

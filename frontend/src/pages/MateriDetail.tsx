@@ -58,7 +58,7 @@ export default function MateriDetail() {
 
       toast.success("Topics generated successfully!");
 
-      const updated = await api.get(`/api/materials/${id}`);
+      const updated = await api.get(`/materials/${id}`);
       setMaterial(updated.data || updated.data.data);
       if (updated.data.topics && updated.data.topics.length > 0) {
         setSelectedTopic(updated.data.topics[0] || updated.data.data.topics[0]);
@@ -94,23 +94,46 @@ export default function MateriDetail() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
             <p className="text-sm text-muted-foreground mb-1">{material.subject}</p>
-            <h1 className="text-2xl font-bold">{material.title}</h1>
+            {/* <h1 className="text-2xl font-bold">{material.title}</h1> */}
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold">{material.title}</h1>
+              {material.lastScore !== null && material.lastScore !== undefined && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  Skor: {material.lastScore}%
+                </span>
+              )}
+            </div>
+            <div className="mt-2">
+              <StatusBadge status={material.status} />
+            </div>
           </div>
           <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={handleGenerate} disabled={isGenerating}>
               <Sparkles className={cn("h-4 w-4 mr-2", isGenerating && "animate-spin")} />
               {isGenerating ? "Processing..." : "Generate Breakdown"}
             </Button>
-            <Button variant="outline" asChild>
-              <Link to={`/quiz/create?materialId=${id}`}>
+            <Button variant={material.associatedQuizId ? "default" : "outline"} asChild>
+              <Link
+                to={
+                  !material.associatedQuizId
+                    ? `/quiz/create?materialId=${id}` // Kondisi 1: Belum ada kuis
+                    : material.lastScore !== null && material.lastScore !== undefined
+                    ? `/quiz/result/${material.associatedQuizId}` // Kondisi 3: Sudah selesai
+                    : `/quiz/take/${material.associatedQuizId}` // Kondisi 2: Belum selesai
+                }
+              >
                 <ClipboardList className="h-4 w-4 mr-2" />
-                Buat Quiz
+                {!material.associatedQuizId
+                  ? "Buat Quiz"
+                  : material.lastScore !== null && material.lastScore !== undefined
+                  ? "Lihat Hasil Quiz"
+                  : "Lanjut Kuis"}
               </Link>
             </Button>
-            <Button variant="outline" asChild>
-              <Link to={`/ringkasan/${id}`}>
+            <Button variant={material.examSummary ? "default" : "outline"} asChild>
+              <Link to={`/ringkasan?materialId=${id}&autoGenerate=true`}>
                 <FileCheck className="h-4 w-4 mr-2" />
-                Ringkasan
+                {material.examSummary ? "Lihat Ringkasan" : "Ringkasan"}
               </Link>
             </Button>
           </div>

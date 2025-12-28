@@ -1,106 +1,326 @@
-import { useState } from 'react';
-import { Layout } from '@/components/layout/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { GradientButton } from '@/components/ui/GradientButton';
-import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
-import { mockMaterials, mataKuliahList } from '@/data/mockData';
-import { FileCheck, Download, Sparkles } from 'lucide-react';
-import { toast } from 'sonner';
-
-const summaryContent = {
-  title: 'Ringkasan: Process Management & Scheduling',
-  sections: [
-    { title: '1. Process & Thread', points: ['Process = program yang sedang dieksekusi', 'Thread = unit eksekusi terkecil dalam process', 'Thread berbagi memory space dengan parent process'] },
-    { title: '2. CPU Scheduling', points: ['Menentukan proses mana yang dieksekusi CPU', 'Kriteria: CPU utilization, throughput, turnaround time', 'Algoritma: FCFS, SJF, Round Robin, Priority'] },
-    { title: '3. Context Switching', points: ['Proses menyimpan dan memuat state CPU', 'Overhead yang perlu diminimalkan', 'Lebih cepat antar thread daripada antar process'] },
-  ],
-  checklist: ['Pahami perbedaan Process vs Thread', 'Hafal kriteria scheduling', 'Bisa menghitung turnaround time', 'Pahami kelebihan/kekurangan setiap algoritma'],
-};
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Layout } from "@/components/layout/Layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { GradientButton } from "@/components/ui/GradientButton";
+import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
+import { FileCheck, Download, Sparkles, CheckCircle2, ArrowLeft, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import api from "@/utils/api";
+import jsPDF from "jspdf";
+import { cn } from "@/lib/utils";
 
 export default function Ringkasan() {
-  const [mataKuliah, setMataKuliah] = useState('');
-  const [material, setMaterial] = useState('');
+  const [mataKuliahList, setMataKuliahList] = useState<string[]>([]);
+  const [allMaterials, setAllMaterials] = useState<any[]>([]);
+  const [mataKuliah, setMataKuliah] = useState("");
+  const [material, setMaterial] = useState("");
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [checked, setChecked] = useState<string[]>([]);
+  const [summaryContent, setSummaryContent] = useState<any>(null);
 
-  const materials = mockMaterials.filter(m => m.mataKuliah === mataKuliah);
+  const [searchParams] = useSearchParams();
+  const materialIdParam = searchParams.get("materialId");
+  const autoGenerate = searchParams.get("autoGenerate");
 
-  const handleGenerate = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+  useEffect(() => {
+    const fetchMaterials = async () => {
+      try {
+        const response = await api.get("/materials");
+        const data = response.data.data;
+        setAllMaterials(data);
+
+        const subjects = Array.from(new Set(data.map((m: any) => m.subject).filter(Boolean)));
+        setMataKuliahList(subjects as string[]);
+
+        if (materialIdParam) {
+          const selectMat = data.find((m: any) => m.id === materialIdParam);
+          if (selectMat) {
+            setMataKuliah(selectMat.subject);
+            setMaterial(selectMat.id);
+
+            if (selectMat.examSummary) {
+              setSummaryContent(selectMat.examSummary);
+              setGenerated(true);
+            } else if (autoGenerate === "true") {
+              // Kita gunakan setTimeout sedikit agar state material ter-update dulu
+              setTimeout(() => {
+                handleGenerateAuto(selectMat.id, data);
+              }, 100);
+            }
+          }
+        }
+      } catch (error) {
+        toast.error("Failed to fetch materials.");
+      }
+    };
+    fetchMaterials();
+  }, [materialIdParam, autoGenerate]);
+
+  const filteredMaterials = allMaterials.filter((m) => m.subject === mataKuliah);
+
+  const handleExportPDF = () => {
+    if (!summaryContent) return;
+
+    const doc = new jsPDF();
+    let cursorY = 20;
+
+    // Title
+    doc.setFontSize(18);
+    doc.setTextColor(40, 40, 40);
+    doc.text(summaryContent.title || "Ringkasan Materi", 10, cursorY);
+    cursorY += 15;
+
+    // Sections
+    summaryContent.sections?.forEach((section: any) => {
+      // Cek sisa halaman, jika mepet buat halaman baru
+      if (cursorY > 270) {
+        doc.addPage();
+        cursorY = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(section.title, 10, cursorY);
+      cursorY += 7;
+
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      section.points?.forEach((point: string) => {
+        const splitPoint = doc.splitTextToSize(`• ${point}`, 180);
+        doc.text(splitPoint, 15, cursorY);
+        cursorY += splitPoint.length * 6;
+      });
+      cursorY += 5;
+    });
+
+    // Checklist Header
+    if (cursorY > 250) {
+      doc.addPage();
+      cursorY = 20;
+    }
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Checklist Persiapan Ujian:", 10, cursorY);
+    cursorY += 8;
+
+    // Checklist items
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    summaryContent.checklist?.forEach((item: string) => {
+      doc.text(`[ ] ${item}`, 15, cursorY);
+      cursorY += 7;
+    });
+
+    doc.save(`Ringkasan_${mataKuliah || "Materi"}.pdf`);
+    toast.success("PDF berhasil diunduh!");
+  };
+
+  const handleGenerate = async () => {
+    if (!material) return;
+
+    const selectedMat = allMaterials.find((m) => m.id === material);
+    if (selectedMat?.examSummary) {
+      setSummaryContent(selectedMat.examSummary);
       setGenerated(true);
-      toast.success('Ringkasan berhasil dibuat!');
-    }, 2000);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await api.post("/ai/summarize-material", {
+        materialId: material,
+      });
+
+      if (response.data.success) {
+        console.log("Data dari AI:", response.data.summary);
+        const data = response.data.summary;
+        setSummaryContent(data);
+        setGenerated(true);
+        toast.success("Ringkasan berhasil dibuat!");
+      }
+    } catch (error) {
+      toast.error("Failed to generate summary.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerateAuto = async (id: string, currentMaterials: any[]) => {
+    setLoading(true);
+    try {
+      const response = await api.post("/ai/summarize-material", {
+        materialId: id,
+      });
+
+      if (response.data.success) {
+        const data = response.data.summary;
+        setSummaryContent(data);
+        setGenerated(true);
+        toast.success("Ringkasan berhasil dibuat!");
+      }
+    } catch (error) {
+      toast.error("Gagal menjalankan AI otomatis.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleCheck = (item: string) => {
-    setChecked(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
+    setChecked((prev) => (prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]));
   };
 
   return (
     <Layout showFooter={false}>
-      <div className="container py-8">
+      <div className="container py-8 max-w-4xl">
         <h1 className="text-2xl font-bold mb-6">Ringkasan UTS / UAS</h1>
 
         {!generated ? (
-          <Card className="max-w-xl mx-auto">
-            <CardContent className="p-6 space-y-4">
-              <div className="h-16 w-16 mx-auto rounded-xl gradient-primary flex items-center justify-center mb-4">
-                <FileCheck className="h-8 w-8 text-primary-foreground" />
+          <Card className="max-w-xl mx-auto shadow-lg">
+            <CardContent className="p-8 space-y-6">
+              <div className="h-20 w-20 mx-auto rounded-2xl gradient-primary flex items-center justify-center mb-4">
+                <FileCheck className="h-10 w-10 text-primary-foreground" />
               </div>
-              <p className="text-center text-muted-foreground mb-4">Generate ringkasan materi untuk persiapan ujianmu.</p>
-              <Select value={mataKuliah} onValueChange={v => { setMataKuliah(v); setMaterial(''); }}>
-                <SelectTrigger><SelectValue placeholder="Pilih Mata Kuliah" /></SelectTrigger>
-                <SelectContent>{mataKuliahList.map(mk => <SelectItem key={mk} value={mk}>{mk}</SelectItem>)}</SelectContent>
-              </Select>
-              <Select value={material} onValueChange={setMaterial} disabled={!mataKuliah}>
-                <SelectTrigger><SelectValue placeholder="Pilih Materi" /></SelectTrigger>
-                <SelectContent>{materials.map(m => <SelectItem key={m.id} value={m.id}>{m.title}</SelectItem>)}</SelectContent>
-              </Select>
-              <GradientButton className="w-full" onClick={handleGenerate} disabled={!material || loading}>
-                {loading ? 'Generating...' : <><Sparkles className="h-4 w-4 mr-2" />Generate Ringkasan</>}
-              </GradientButton>
+              <div className="space-y-4 pt-4">
+                <Select
+                  value={mataKuliah}
+                  onValueChange={(v) => {
+                    setMataKuliah(v);
+                    setMaterial("");
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Mata Kuliah" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mataKuliahList.map((mk) => (
+                      <SelectItem key={mk} value={mk}>
+                        {mk}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={material} onValueChange={setMaterial} disabled={!mataKuliah}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Materi" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredMaterials.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <GradientButton
+                  className="w-full h-11"
+                  onClick={handleGenerate}
+                  disabled={!material || loading}
+                >
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 mr-2" />
+                  )}
+                  {loading ? "Menganalisis..." : "Generate Ringkasan"}
+                </GradientButton>
+              </div>
             </CardContent>
           </Card>
-        ) : loading ? (
-          <LoadingSkeleton variant="card" count={3} />
         ) : (
-          <div className="max-w-3xl mx-auto space-y-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>{summaryContent.title}</CardTitle>
-                <Button variant="outline" onClick={() => toast.success('PDF akan didownload')}><Download className="h-4 w-4 mr-2" />Export PDF</Button>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setGenerated(false);
+                  setSummaryContent(null);
+                }}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" /> Kembali
+              </Button>
+              <Button variant="outline" onClick={handleExportPDF}>
+                <Download className="h-4 w-4 mr-2" /> Export PDF
+              </Button>
+            </div>
+
+            <Card className="border-primary/20 shadow-md">
+              <CardHeader className="border-b bg-muted/30">
+                <CardTitle className="text-xl text-primary font-bold">
+                  {summaryContent?.title || "Hasil Analisis AI"}
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {summaryContent.sections.map((section, i) => (
-                  <div key={i}>
-                    <h3 className="font-semibold mb-2">{section.title}</h3>
-                    <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                      {section.points.map((p, j) => <li key={j}>{p}</li>)}
-                    </ul>
+              <CardContent className="p-6">
+                {typeof summaryContent === "string" ? (
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                    {summaryContent}
                   </div>
-                ))}
+                ) : (
+                  <div className="space-y-8">
+                    {summaryContent?.sections?.map((section: any, i: number) => (
+                      <div key={i} className="space-y-3">
+                        <h3 className="font-bold text-lg flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-primary" /> {section.title}
+                        </h3>
+                        <ul className="grid gap-2 ml-4">
+                          {section.points?.map((p: string, j: number) => (
+                            <li
+                              key={j}
+                              className="text-muted-foreground flex items-start gap-2 text-sm"
+                            >
+                              <span className="text-primary mt-1">•</span> {p}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader><CardTitle className="text-lg">Checklist Belajar</CardTitle></CardHeader>
-              <CardContent className="space-y-3">
-                {summaryContent.checklist.map((item, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <Checkbox id={`check-${i}`} checked={checked.includes(item)} onCheckedChange={() => toggleCheck(item)} />
-                    <label htmlFor={`check-${i}`} className={checked.includes(item) ? 'line-through text-muted-foreground' : ''}>{item}</label>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            <Button variant="outline" className="w-full" onClick={() => setGenerated(false)}>Buat Ringkasan Lain</Button>
+            {summaryContent?.checklist && (
+              <Card className="border-primary/20 shadow-md bg-primary/5">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-primary" /> Checklist Belajar
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid gap-3 p-6 pt-0">
+                  {summaryContent.checklist.map((item: string, i: number) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 bg-background p-3 rounded-lg border shadow-sm"
+                    >
+                      <Checkbox
+                        id={`check-${i}`}
+                        checked={checked.includes(item)}
+                        onCheckedChange={() => toggleCheck(item)}
+                      />
+                      <label
+                        htmlFor={`check-${i}`}
+                        className={cn(
+                          "text-sm font-medium cursor-pointer",
+                          checked.includes(item) && "line-through text-muted-foreground"
+                        )}
+                      >
+                        {item}
+                      </label>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
       </div>

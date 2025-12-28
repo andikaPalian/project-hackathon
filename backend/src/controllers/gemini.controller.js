@@ -113,9 +113,10 @@ export const generateQuizController = async (req, res) => {
 
     finalTopic = finalTopic || "Topik Umum";
 
-    const quiz = await generateQuiz(topic, difficulty, userContext, amount);
+    const quiz = await generateQuiz(finalTopic, difficulty, userContext, amount);
 
     const quizRecord = {
+      materialId: materialId,
       title: finalTopic,
       topic: finalTopic,
       difficulty: difficulty,
@@ -126,6 +127,12 @@ export const generateQuizController = async (req, res) => {
     };
 
     const docRef = await db.collection("quizzes").add(quizRecord);
+
+    if (materialId) {
+      await db.collection("materials").doc(materialId).update({
+        associatedQuizId: docRef.id,
+      });
+    }
 
     return res.status(201).json({
       success: true,
@@ -229,6 +236,7 @@ export const summarizeMaterialController = async (req, res) => {
       title: title || file.originalname,
       subject: subject,
       summary: summary.summary,
+      examSummary: summary.examPreparation,
       fullContent: summary.originalText,
       fileUrl: cloudinaryResult.secure_url,
       filePublicId: cloudinaryResult.public_id,
@@ -244,6 +252,39 @@ export const summarizeMaterialController = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: summary,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const generateSummarizeFromMaterial = async (req, res) => {
+  try {
+    const { materialId } = req.body;
+
+    const doc = await db.collection("materials").doc(materialId).get();
+    if (!doc.exists) {
+      return res.status(404).json({
+        success: false,
+        message: "Material not found",
+      });
+    }
+
+    const material = doc.data();
+
+    const result = await summarizeMaterial(null, null, material.fullContent || material.summary);
+
+    await db.collection("materials").doc(materialId).update({
+      examSummary: result.examPreparation,
+    });
+
+    return res.status(200).json({
+      success: true,
+      summary: result.examPreparation,
+      data: result,
     });
   } catch (error) {
     return res.status(500).json({

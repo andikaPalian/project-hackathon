@@ -9,6 +9,7 @@ import api from "@/utils/api";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export default function Quiz() {
   const [quizzes, setQuizzes] = useState<any[]>([]);
@@ -67,38 +68,71 @@ export default function Quiz() {
           />
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {quizzes.map((quiz) => (
-              <Link key={quiz.id} to={`/quiz/${quiz.id}`}>
-                <Card className="hover-lift h-full">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="h-10 w-10 rounded-lg gradient-primary flex items-center justify-center">
-                        <ClipboardList className="h-5 w-5 text-primary-foreground" />
-                      </div>
-                      <StatusBadge
-                        status={
-                          quiz.lastScore !== null && quiz.lastScore !== undefined
-                            ? "Selesai" 
-                            : quiz.difficulty
-                        }
-                      />
-                    </div>
-                    <h3 className="font-medium mt-3">{quiz.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {quiz.questions?.length || 0} soal
-                    </p>
-                    {quiz.score !== undefined && (
-                      <div className="mt-3 pt-3 border-t">
-                        <p className="text-sm">
-                          <span className="font-semibold text-green-600">{quiz.score}%</span>
-                          {quiz.completedAt && ` • ${quiz.completedAt}`}
-                        </p>
-                      </div>
+            {quizzes.map((quiz) => {
+              const isFinished = quiz.score !== null && quiz.score !== undefined;
+
+              return (
+                <Link
+                  key={quiz.id}
+                  to={isFinished ? `/quiz/result/${quiz.id}` : `/quiz/take/${quiz.id}`}
+                >
+                  <Card
+                    className={cn(
+                      "hover-lift h-full transition-all",
+                      isFinished ? "border-green-200 bg-green-50/10" : "border-border"
                     )}
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div
+                          className={cn(
+                            "h-10 w-10 rounded-lg flex items-center justify-center",
+                            isFinished ? "bg-green-100" : "gradient-primary"
+                          )}
+                        >
+                          <ClipboardList
+                            className={cn(
+                              "h-5 w-5",
+                              isFinished ? "text-green-600" : "text-primary-foreground"
+                            )}
+                          />
+                        </div>
+                        <StatusBadge status={isFinished ? "Selesai" : quiz.difficulty} />
+                      </div>
+
+                      <h3 className="font-medium mt-3">{quiz.title}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {quiz.questions?.length || 0} soal
+                      </p>
+
+                      {isFinished && (
+                        <div className="mt-3 pt-3 border-t border-green-100">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-green-700">
+                              Skor: <span className="text-lg font-bold">{quiz.score}%</span>
+                            </p>
+                            {quiz.completedAt && (
+                              <span className="text-[10px] text-muted-foreground">
+                                {quiz.completedAt}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-green-600 mt-1 font-medium">
+                            Klik untuk lihat pembahasan →
+                          </p>
+                        </div>
+                      )}
+
+                      {!isFinished && (
+                        <div className="mt-4 flex items-center text-xs text-primary font-medium">
+                          Kerjakan Sekarang →
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

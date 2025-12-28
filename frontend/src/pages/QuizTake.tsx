@@ -57,13 +57,16 @@ export default function QuizTake() {
       setSelected(null);
       setAnswered(false);
     } else {
+      // const finalScore = Math.round((score / total) * 100);
       const finalScore = Math.round(
         ((score + (selected === question.correctIndex ? 1 : 0)) / total) * 100
       );
       try {
         await api.patch(`/quiz/${quizId}/score`, { score: finalScore });
+        toast.success("Progres belajar berhasil disimpan!");
       } catch (e) {
         console.error("Gagal simpan skor");
+        toast.error("Gagal menyimpan hasil kuis.");
       }
       setFinished(true);
     }

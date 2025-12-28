@@ -104,7 +104,6 @@ export const generateQuiz = async (topic, difficulty, userContext, amount = 5) =
 
     let cleanJson = rawText.substring(firstBracket, lastBracket + 1);
 
-    // 3. Tambahan: Hapus jika ada karakter aneh yang tersisa
     cleanJson = cleanJson.trim();
 
     return JSON.parse(cleanJson);
@@ -188,25 +187,43 @@ export const generateQuizFromMaterial = async (
   }
 };
 
-export const summarizeMaterial = async (fileData, mimeType) => {
+export const summarizeMaterial = async (fileData, mimeType, textContent = null) => {
   try {
     let textToSummarize = "";
 
-    if (mimeType === "application/pdf") {
-      textToSummarize = await extractTextFromPdf(fileData);
-    } else if (
-      mimeType === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
-      mimeType === "application/vnd.ms-powerpoint"
-    ) {
-      textToSummarize = await new Promise((resolve, reject) => {
-        officeParser.parseOffice(fileData, (data, err) => {
-          if (err) reject(err);
-          else resolve(data);
+    if (textContent) {
+      textToSummarize = textContent;
+    } else if (fileData) {
+      if (mimeType === "application/pdf") {
+        textToSummarize = await extractTextFromPdf(fileData);
+      } else if (
+        mimeType === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+        mimeType === "application/vnd.ms-powerpoint"
+      ) {
+        textToSummarize = await new Promise((resolve, reject) => {
+          officeParser.parseOffice(fileData, (data, err) => {
+            if (err) reject(err);
+            else resolve(data);
+          });
         });
-      });
-    } else {
-      throw new Error("Unsupported file type for summarization.");
+      }
     }
+
+    // if (mimeType === "application/pdf") {
+    //   textToSummarize = await extractTextFromPdf(fileData);
+    // } else if (
+    //   mimeType === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+    //   mimeType === "application/vnd.ms-powerpoint"
+    // ) {
+    //   textToSummarize = await new Promise((resolve, reject) => {
+    //     officeParser.parseOffice(fileData, (data, err) => {
+    //       if (err) reject(err);
+    //       else resolve(data);
+    //     });
+    //   });
+    // } else {
+    //   throw new Error("Unsupported file type for summarization.");
+    // }
 
     if (!textToSummarize || textToSummarize.trim().length === 0) {
       throw new Error("Failed to extract text from the provided material.");
@@ -224,6 +241,18 @@ export const summarizeMaterial = async (fileData, mimeType) => {
       2. Kelompokkan berdasarkan Bab atau Topik utama.
       3. Gunakan formatting markdown (Bold, Bullet points) agar mudah dibaca cepat (skimming).
       4. Jika ada rumus tuliskan dengan jelas.
+      5. Output wajib dalam format JSON murni:
+        Buatlah output dalam format JSON dengan struktur:
+        {
+          "summary": "Teks ringkasan umum dalam markdown",
+          "examPreparation": {
+            "title": "Ringkasan UTS/UAS: [Judul]",
+            "sections": [
+              { "title": "Bab 1: ...", "points": ["poin utama", "poin utama"] }
+            ],
+            "checklist": ["Pahami konsep A", "Hafal rumus B"]
+          }
+        }
     `;
 
     // const request = [
@@ -239,8 +268,22 @@ export const summarizeMaterial = async (fileData, mimeType) => {
     // ];
 
     const result = await chatModel.generateContent(prompt);
+    let rawText = result.response.text();
+
+    const firstBracket = rawText.indexOf("{");
+    const lastBracket = rawText.lastIndexOf("}");
+
+    if (firstBracket === -1 || lastBracket === -1) {
+      rawText = rawText.substring(firstBracket, lastBracket + 1);
+    }
+
+    let cleanJson = rawText.substring(firstBracket, lastBracket + 1).trim();
+
+    const parsedData = JSON.parse(cleanJson);
+
     return {
-      summary: result.response.text(),
+      summary: parsedData.summary,
+      examPreparation: parsedData.examPreparation,
       originalText: textToSummarize,
     };
   } catch (error) {
@@ -269,7 +312,8 @@ export const generateTopicsFromMaterial = async (fileData, mimeType) => {
     }
 
     const prompt = `
-      Berdasarkan materi berikut ini, buatkan kurikulum belajar yang tersturktur:
+      Kamu adalah seorang asisten belajar yangg ahili dalam meringkas materi pembelajaran.
+      Tolong buat ringkasan dan persiapan ujian dari materi berikut ini, buatkan kurikulum belajar yang tersturktur: 
 
       [MATERI]
       ${textContent.substring(0, 25000)}
@@ -294,6 +338,9 @@ export const generateTopicsFromMaterial = async (fileData, mimeType) => {
           ]
         }
       ]
+
+      PENTING: Berikan output HANYA dalam format JSON murni. 
+      Jangan memberikan kata pengantar, salam, atau penjelasan apapun di luar JSON.
     `;
 
     const result = await chatModel.generateContent(prompt);

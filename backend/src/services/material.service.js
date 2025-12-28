@@ -2,13 +2,35 @@ import { db } from "../config/firebase.js";
 import { extractTextFromPdf } from "../helper/extractPdf.js";
 import { uploadToCloudinary } from "../helper/uploadFile.js";
 import { generateTopicsFromMaterial } from "./gemini.service.js";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
+const officeParser = require("officeparser");
 
 export const createMaterial = async (userId, file, title, subject) => {
   try {
     // const fileName = `${userId}-${Date.now()}-${file.originalname.split(".")[0]}`;
     const fileName = `${userId}-${Date.now()}`;
 
-    const textContent = await extractTextFromPdf(file.buffer);
+    let textContent = "";
+
+    if (file.mimetype === "application/pdf") {
+      textContent = await extractTextFromPdf(file.buffer);
+    } else if (
+      file.mimetype ===
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+      file.mimetype === "application/vnd.ms-powerpoint"
+    ) {
+      // Gunakan officeParser untuk PPT
+      textContent = await new Promise((resolve, reject) => {
+        officeParser.parseOffice(file.buffer, (data, err) => {
+          if (err) reject(new Error("Gagal membaca file PPT: " + err));
+          else resolve(data);
+        });
+      });
+    } else {
+      throw new Error("Format file tidak didukung. Harap upload PDF atau PPT.");
+    }
     const topics = await generateTopicsFromMaterial(file.buffer, file.mimetype);
 
     const cloudinaryResult = await uploadToCloudinary(file.buffer, "hackathon_materials", fileName);
