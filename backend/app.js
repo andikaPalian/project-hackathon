@@ -1,3 +1,13 @@
+if (typeof global.DOMMatrix === "undefined") {
+  global.DOMMatrix = class {};
+}
+if (typeof global.Path2D === "undefined") {
+  global.Path2D = class {};
+}
+if (typeof global.ImageData === "undefined") {
+  global.ImageData = class {};
+}
+
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
