@@ -3,7 +3,11 @@ import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 export const extractTextFromPdf = async (buffer) => {
   const uint8Array = new Uint8Array(buffer);
 
-  const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
+  const loadingTask = pdfjsLib.getDocument({
+    data: uint8Array,
+    disableFontFace: true,
+    verbosity: 0,
+  });
   const pdfDocument = await loadingTask.promise;
 
   let fullText = "";
