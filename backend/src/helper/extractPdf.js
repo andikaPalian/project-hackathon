@@ -1,5 +1,7 @@
 // import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
-import pdf from "pdf-parse/lib/pdf-parse.js";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const pdf = require("pdf-parse");
 
 // export const extractTextFromPdf = async (buffer) => {
 //   const uint8Array = new Uint8Array(buffer);

@@ -1,13 +1,3 @@
-if (typeof global.DOMMatrix === "undefined") {
-  global.DOMMatrix = class {};
-}
-if (typeof global.Path2D === "undefined") {
-  global.Path2D = class {};
-}
-if (typeof global.ImageData === "undefined") {
-  global.ImageData = class {};
-}
-
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
@@ -26,7 +16,17 @@ connectCloudinary();
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:8080",
+      "http://localhost:5173",
+      "https://project-hackathon-one.vercel.app",
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  })
+);
 app.use(helmet());
 app.use(morgan("dev"));
 
