@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logoKira from "@/image/logo_kira_hackathon.jpeg";
+import kira from "@/image/kira.svg";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -57,7 +58,7 @@ export function Navbar() {
         {/* Logo */}
         <Link to={isAuthenticated ? "/dashboard" : "/"} className="flex items-center gap-2">
           <img
-            src={logoKira}
+            src={kira}
             alt="Logo KIRA"
             className="h-9 w-9 object-contain" // Ukuran tetap h-9 w-9 agar konsisten dengan desain lama
           />

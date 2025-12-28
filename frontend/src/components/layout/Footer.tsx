@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import logoKira from "@/image/logo_kira_hackathon.jpeg";
+import kira from "@/image/kira.svg";
 
 const footerLinks = {
   produk: [
@@ -34,7 +35,7 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <img src={logoKira} alt="Logo KIRA" className="h-8 w-8 object-contain" />
+              <img src={kira} alt="Logo KIRA" className="h-8 w-8 object-contain" />
               <span className="text-lg font-bold gradient-text">KIRA</span>
             </Link>
             <p className="text-sm text-muted-foreground">
