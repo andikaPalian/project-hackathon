@@ -26,6 +26,7 @@ import { Search, Upload, Grid, List, FileText, Filter, CheckCircle } from "lucid
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { uploadMaterial, getMaterials } from "@/utils/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Materi() {
   const [view, setView] = useState<"grid" | "list">("grid");
@@ -129,7 +130,6 @@ export default function Materi() {
                       <p className="text-sm text-muted-foreground">PDF, PPT, PPTX (max 50MB)</p>
                     </>
                   )}
-
                   <input
                     type="file"
                     id="file-upload"
@@ -206,8 +206,28 @@ export default function Materi() {
           </div>
         </div>
 
-        {/* Content */}
-        {filtered.length === 0 ? (
+        {/* --- Bagian Utama Konten --- */}
+        {loadingData ? (
+          // Tahap 1: Tampilkan Skeleton Loading
+          <div
+            className={cn(
+              view === "grid" ? "grid md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"
+            )}
+          >
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="h-28">
+                <CardContent className="p-4 flex items-center gap-4">
+                  <Skeleton className="h-12 w-12 rounded-lg" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-[80%]" />
+                    <Skeleton className="h-3 w-[50%]" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          // Tahap 2: Tampilkan Empty State jika data kosong
           <EmptyState
             icon={<FileText className="h-8 w-8 text-muted-foreground" />}
             title="Belum ada materi"
@@ -220,6 +240,7 @@ export default function Materi() {
             }
           />
         ) : (
+          // Tahap 3: Tampilkan Data Asli
           <div
             className={cn(
               view === "grid" ? "grid md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"
@@ -227,7 +248,7 @@ export default function Materi() {
           >
             {filtered.map((m) => (
               <Link key={m.id} to={`/materi/${m.id}`}>
-                <Card className="hover-lift h-full">
+                <Card className="hover-lift h-full transition-all duration-300">
                   <CardContent
                     className={cn("p-4", view === "list" && "flex items-center justify-between")}
                   >
@@ -243,7 +264,7 @@ export default function Materi() {
                         <FileText className="h-5 w-5" />
                       </div>
                       <div className={view === "grid" ? "mt-3" : ""}>
-                        <p className="font-medium">{m.title}</p>
+                        <p className="font-medium line-clamp-1">{m.title}</p>
                         <p className="text-sm text-muted-foreground">
                           {m.subject || m.mataKuliah ? `${m.subject || m.mataKuliah} • ` : ""}
                           {m.topicCount || 0} topik

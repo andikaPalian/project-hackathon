@@ -66,9 +66,24 @@ export default function Dashboard() {
 
   if (loading)
     return (
-      <Layout>
+      <Layout showFooter={false}>
         <div className="container py-8">
-          <LoadingSkeleton variant="card" count={3} />
+          <div className="mb-8 space-y-2">
+            <LoadingSkeleton variant="text" className="h-8 w-48" />
+            <LoadingSkeleton variant="text" className="h-4 w-64" />
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <LoadingSkeleton variant="card" className="h-48" />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <LoadingSkeleton variant="card" count={4} className="h-24" />
+              </div>
+            </div>
+            <div className="space-y-6">
+              <LoadingSkeleton variant="card" className="h-64" />
+            </div>
+          </div>
         </div>
       </Layout>
     );
