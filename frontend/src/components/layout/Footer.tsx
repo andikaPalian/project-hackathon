@@ -34,13 +34,15 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-4">
+            <Link to="/" className="flex items-center group transition-opacity hover:opacity-90">
               <img
                 src={kira}
                 alt="Logo KIRA"
-                className="h-10 w-10 md:h-12 md:w-12 object-contain"
+                className="h-12 w-12 md:h-14 md:w-14 object-contain scale-110"
               />
-              <span className="text-lg font-bold gradient-text">KIRA</span>
+              <span className="text-xl md:text-2xl font-extrabold tracking-tighter gradient-text font-sans leading-none ml-1 mt-[1px] block">
+                KIRA
+              </span>
             </Link>
             <p className="text-sm text-muted-foreground">
               Personal AI Learning Companion untuk mahasiswa. Belajar jadi terarah, bukan sekadar

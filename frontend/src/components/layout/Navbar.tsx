@@ -56,13 +56,20 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link to={isAuthenticated ? "/dashboard" : "/"} className="flex items-center gap-2">
-          <img
-            src={kira}
-            alt="Logo KIRA"
-            className="h-10 w-10 md:h-12 md:w-12 object-contain" // Ukuran tetap h-9 w-9 agar konsisten dengan desain lama
-          />
-          <span className="text-xl font-bold gradient-text">KIRA</span>
+        <Link
+          to={isAuthenticated ? "/dashboard" : "/"}
+          className="flex items-center group transition-opacity hover:opacity-90"
+        >
+          <div className="flex items-center justify-center shrink-0">
+            <img
+              src={kira}
+              alt="Logo KIRA"
+              className="h-12 w-12 md:h-14 md:w-14 object-contain scale-110"
+            />
+          </div>
+          <span className="text-xl md:text-2xl font-extrabold tracking-tighter gradient-text font-sans leading-none ml-1 mt-[1px] block">
+            KIRA
+          </span>
         </Link>
 
         {/* Desktop Navigation */}
