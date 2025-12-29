@@ -60,7 +60,7 @@ export function Navbar() {
           <img
             src={kira}
             alt="Logo KIRA"
-            className="h-9 w-9 object-contain" // Ukuran tetap h-9 w-9 agar konsisten dengan desain lama
+            className="h-10 w-10 md:h-12 md:w-12 object-contain" // Ukuran tetap h-9 w-9 agar konsisten dengan desain lama
           />
           <span className="text-xl font-bold gradient-text">KIRA</span>
         </Link>

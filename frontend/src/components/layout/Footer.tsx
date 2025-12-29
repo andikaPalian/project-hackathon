@@ -35,7 +35,11 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <img src={kira} alt="Logo KIRA" className="h-8 w-8 object-contain" />
+              <img
+                src={kira}
+                alt="Logo KIRA"
+                className="h-10 w-10 md:h-12 md:w-12 object-contain"
+              />
               <span className="text-lg font-bold gradient-text">KIRA</span>
             </Link>
             <p className="text-sm text-muted-foreground">
