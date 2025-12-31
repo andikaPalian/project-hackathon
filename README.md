@@ -56,7 +56,7 @@ Powered by **Google Gemini 3 Flash**, it analyzes lecture documents (PDFs/Photos
 ### Backend & AI
 
 - **Node.js** & **Express**
-- **Google Gemini 3 Flash API**: The core model for high-fidelity text and media generation.
+- **Google Gemini 2.5 Flash API**: The core model for high-fidelity text and media generation.
 - **Cloudinary**: Secure and optimized cloud media storage.
 
 ### Infrastructure
@@ -69,7 +69,7 @@ Powered by **Google Gemini 3 Flash**, it analyzes lecture documents (PDFs/Photos
 The system utilizes a modern cloud-based architecture:
 
 1. **User Input**: Uploads files or shares screen/camera via Gemini Live.
-2. **Processing**: Backend parses data and leverages Gemini 3 Flash for synthesis.
+2. **Processing**: Backend parses data and leverages Gemini 2.5 Flash for synthesis.
 3. **Storage**: Cloudinary handles media while Firebase manages users and authentication.
 
 ## 🚀 Getting Started
