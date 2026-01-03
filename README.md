@@ -23,7 +23,7 @@
 
 **KIRA** is a high-performance **Mobile Web** application designed to help students overcome _information overload_. Built specifically for the **2025 Hackathon**, KIRA goes beyond simple summarization.
 
-Powered by **Google Gemini 3 Flash**, it analyzes lecture documents (PDFs/Photos), breaks them down into tiered summaries, generates adaptive quizzes, and provides a personal AI Tutor ready to answer contextual questions 24/7.
+Powered by **Google Gemini 2.5 Flash**, it analyzes lecture documents (PDFs/Photos), breaks them down into tiered summaries, generates adaptive quizzes, and provides a personal AI Tutor ready to answer contextual questions 24/7.
 
 ## ✨ Key Features
 
@@ -127,3 +127,4 @@ Contributions are welcome! Please fork this repository and create a Pull Request
 3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
 4.  Push to the Branch (`git push origin feature/AmazingFeature`)
 5.  Open a Pull Request
+
