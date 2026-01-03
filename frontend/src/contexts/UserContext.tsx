@@ -6,6 +6,8 @@ import {
   onAuthStateChanged,
   User as FirebaseUser,
   UserCredential,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from "firebase/auth";
 import { auth } from "@/utils/firebase";
 import { User } from "@/data/mockData";
@@ -14,6 +16,7 @@ import api from "@/utils/api";
 interface UserContextType {
   user: User | null;
   firebaseUser: FirebaseUser | null;
+  loginWithGoogle: () => Promise<void>;
   isAuthenticated: boolean;
   isOnboarded: boolean;
   loading: boolean;
@@ -67,6 +70,25 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     await signInWithEmailAndPassword(auth, email, password);
+  };
+
+  const loginWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+
+      const idToken = await result.user.getIdToken();
+
+      const response = await api.post("/auth/google", { token: idToken });
+      const backendUser = response.data.user;
+
+      setUser(backendUser);
+      setIsOnboarded(!!backendUser.onboardingCompleted);
+      localStorage.setItem("KIRA_user", JSON.stringify(backendUser));
+    } catch (error: any) {
+      console.error("Error Google Login:", error);
+      throw error;
+    }
   };
 
   const register = async (username: string, email: string, password: string) => {
@@ -150,6 +172,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         logout,
         completeOnboarding,
         updateUser,
+        loginWithGoogle,
       }}
     >
       {!loading && children}
